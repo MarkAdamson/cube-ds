@@ -133,7 +133,7 @@ void CubeGame::_loadSettings()
 
 	FILE* settingsfile = fopen("/DATA/cube.dat", "rb");
 	RubikSide tmpLayout[6];
-	Colour tmpPalette[6];
+	//Colour tmpPalette[6];
 
 	if(settingsfile==NULL)
 	{
@@ -148,8 +148,8 @@ void CubeGame::_loadSettings()
 		fread((void*)&tmpLayout, sizeof(tmpLayout), 1, settingsfile);
 		cube[i].setLayout(tmpLayout);
 
-		fread((void*)&tmpPalette, sizeof(tmpPalette), 1, settingsfile);
-		cube[i].setPalette(tmpPalette);
+		//fread((void*)&tmpPalette, sizeof(tmpPalette), 1, settingsfile);
+		//cube[i].setPalette(tmpPalette);
 	}
 
 	fclose(settingsfile);
@@ -162,7 +162,7 @@ void CubeGame::_loadSettings()
 void CubeGame::_saveSettings()
 {
 	RubikSide tmpLayout[6];
-	Colour tmpPalette[6];
+	//Colour tmpPalette[6];
 
 	FILE* settingsfile=fopen("/DATA/cube.dat", "wb");
 
@@ -172,8 +172,8 @@ void CubeGame::_saveSettings()
 		cube[i].getLayout(tmpLayout);
 		fwrite((void*)&tmpLayout, sizeof(tmpLayout), 1, settingsfile);
 
-		cube[i].getPalette(tmpPalette);
-		fwrite((void*)&tmpPalette, sizeof(tmpPalette), 1, settingsfile);
+		//cube[i].getPalette(tmpPalette);
+		//fwrite((void*)&tmpPalette, sizeof(tmpPalette), 1, settingsfile);
 	}
 	fclose(settingsfile);
 }
@@ -196,7 +196,7 @@ void CubeGame::_saveCube(int cuben)
 
 	Settings tmpSettings;
 	RubikSide tmpLayout[6];
-	Colour tmpPalette[6];
+	//Colour tmpPalette[6];
 	FILE* savefile;
 
 	savefile = fopen("/DATA/cube.dat", "rb");
@@ -210,8 +210,8 @@ void CubeGame::_saveCube(int cuben)
 		cube[i].getLayout(tmpLayout);
 		fwrite((void*)&tmpLayout, sizeof(tmpLayout), 1, savefile);
 
-		cube[i].getPalette(tmpPalette);
-		fwrite((void*)&tmpPalette, sizeof(tmpPalette), 1, savefile);
+		//cube[i].getPalette(tmpPalette);
+		//fwrite((void*)&tmpPalette, sizeof(tmpPalette), 1, savefile);
 	}
 	fclose(savefile);
 
@@ -430,7 +430,11 @@ void CubeGame::_applySettings()
 	mainCube.setTwistSensitivity(_settingsscreen->settings.twistSensitivity);
 	mainCube.setControlStyle(_settingsscreen->settings.controlStyle);
 	for(int i=0; i<6; i++)
+	{
 		mainCube.setColour(i, (_settingsscreen->settings.colour[i][0]+1)*8-1, (_settingsscreen->settings.colour[i][1]+1)*8-1, (_settingsscreen->settings.colour[i][2]+1)*8-1);
+		for(int j=0; j<3; j++)
+			cube[j].setColour(i, (_settingsscreen->settings.colour[i][0]+1)*8-1, (_settingsscreen->settings.colour[i][1]+1)*8-1, (_settingsscreen->settings.colour[i][2]+1)*8-1);
+	}
 }
 
 //------------------------------------------------------------------------------
