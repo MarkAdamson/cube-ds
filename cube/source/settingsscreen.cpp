@@ -305,6 +305,9 @@ void SettingsScreen::buildPainterPage()
 		_pages->addGadgetToPage(4, btnColour[i]);
 	}
 
+	//Button* btnLoadColours = new Button(30, 70, 60, 30, "Load From\nCube");
+	//_pages->addGadgetToPage(4, btnLoadColours);
+
 	/*btnColour[0] = new Button(0, 0, 20, 20, "");
 	btnColour[0]->setBackColour(woopsiRGB(settings.colour[0][0], settings.colour[0][1], settings.colour[0][2]));
 	btnColour[0]->setRefcon(40);

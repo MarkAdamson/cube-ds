@@ -8,8 +8,8 @@
  * set forth in the readme.
  */
 
-#include <cstdio>
-#include <string>
+#include <stdio.h>
+#include <string.h>
 using namespace std;
 #include "cubex.h"
 
