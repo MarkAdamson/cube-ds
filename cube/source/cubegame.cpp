@@ -14,6 +14,7 @@
 #include "math.h"
 
 int SLRotation;
+int paintColour;
 
 void CubeGame::startup()
 {
@@ -42,6 +43,7 @@ void CubeGame::startup()
 	_settingsscreen->btnPlay->addGadgetEventHandler(this);
 	_settingsscreen->btnQLoad->addGadgetEventHandler(this);
 	_settingsscreen->btnCredits->addGadgetEventHandler(this);
+	_settingsscreen->btnPaint->addGadgetEventHandler(this);
 
 	screen->addGadget(_settingsscreen);
 
@@ -61,6 +63,7 @@ void CubeGame::startup()
 	loading=false;
 	saving=false;
 	switching=false;
+	painting=false;
 	SLRotation=0;
 	
 	//setup the sub screen for basic printing
@@ -319,6 +322,16 @@ void CubeGame::_test()
 	//woopsiApplication->screen->btn_Return->moveTo(176, 155);
 }
 
+void CubeGame::_drawPalette()
+{
+	glLoadIdentity();
+	gluLookAt(	0.0, 0.0, 3.5,		//camera position
+				0.0, 0.0, 0.0,		//look at
+				0.0, 1.0, 0.0);		//up
+
+
+}
+
 //-----------------------------------------------------------------------------
 // Calculates and draws all the 3d stuff, as well as asking the cube to draw
 // itself as well.
@@ -334,7 +347,7 @@ void CubeGame::_drawShit()
 	// Update and draw the cube
 	if(!settings)
 	{
-		mainCube.Update(twisting, touchXY, touchVector);
+		mainCube.Update(twisting, touchXY, touchVector, painting, paintColour);
 		oamSet(&oamMain,0,192,0,0,0,SpriteSize_64x32,SpriteColorFormat_256Color,gfxSettings,0,false,false,false,false,false);
 		oamSet(&oamMain,1,256,0,0,0,SpriteSize_64x32,SpriteColorFormat_256Color,gfxBack,0,false,false,false,false,false);
 
@@ -342,7 +355,7 @@ void CubeGame::_drawShit()
 	}else{
 		if(!saving && !loading)
 		{
-			mainCube.Update(twisting, touchXY, touchVector);
+			mainCube.Update(twisting, touchXY, touchVector, false, 0);
 			oamSet(&oamMain,1,256,0,0,0,SpriteSize_64x32,SpriteColorFormat_256Color,gfxBack,0,false,false,false,false,false);
 		}else{
 			oamSet(&oamMain,1,192,0,0,0,SpriteSize_64x32,SpriteColorFormat_256Color,gfxBack,0,false,false,false,false,false);
@@ -354,7 +367,7 @@ void CubeGame::_drawShit()
 			glRotateYi(SLRotation);
 			cube[0].Resize(0.9);
 			//cube[0].Move(-1,0);
-			cube[0].Update(twisting, touchXY, touchVector);
+			cube[0].Update(twisting, touchXY, touchVector, false, 0);
 
 			glLoadIdentity();
 
@@ -365,7 +378,7 @@ void CubeGame::_drawShit()
 			glRotateYi(SLRotation);
 			cube[1].Resize(1);
 			//cube[1].Move(-1,0);
-			cube[1].Update(twisting, touchXY, touchVector);
+			cube[1].Update(twisting, touchXY, touchVector, false, 0);
 
 			glLoadIdentity();
 
@@ -377,7 +390,7 @@ void CubeGame::_drawShit()
 			glRotateYi(SLRotation);
 			cube[2].Resize(0.9);
 			//cube[2].Move(-1,0);
-			cube[2].Update(twisting, touchXY, touchVector);
+			cube[2].Update(twisting, touchXY, touchVector, false, 0);
 
 			if(keysDown() & KEY_TOUCH)
 			{
@@ -501,6 +514,14 @@ void CubeGame::handleActionEvent(const GadgetEventArgs& e)
 		break;
 	case 13:
 		mainCube.Scramble();
+		break;
+	case 46:
+		_settingsscreen->updateSettings();
+		_applySettings();
+		_saveSettings();
+		painting=true;
+		settings=!settings;
+		_switchScreens();
 		break;
 	case 94: //Quick Scramble
 		mainCube.Scramble();

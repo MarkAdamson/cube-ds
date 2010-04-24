@@ -15,7 +15,7 @@ class CubeGame : public Woopsi, public GadgetEventHandler {
 
 private:
 	// States for the game controls
-	bool moving, twisting, settings, saving, loading, switching;
+	bool moving, twisting, settings, saving, loading, switching, painting;
 	u16* gfxSettings;
 	u16* gfxBack;
 	
@@ -40,6 +40,7 @@ private:
 	// Main functions:
 	void _test();
 	void _switchScreens();
+	void _drawPalette();
 	void _drawShit();
 	void _run();
 	void _loadSettings();

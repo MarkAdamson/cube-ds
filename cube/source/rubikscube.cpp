@@ -957,8 +957,13 @@ void RubiksCube::Draw(touchPosition touchXY)
 		
 		if(closeW<0x7FFFFFFF)
 		{
-			Grabbing=true;
-			Picking=false;
+			if(Painting)
+			{
+				Side[clicked[0]].tile[clicked[1]][clicked[2]].color=paintColour;
+			}else{
+				Grabbing=true;
+				Picking=false;
+			}
 		}
 	}else{
 		//Twisting=false;
@@ -969,8 +974,10 @@ void RubiksCube::Draw(touchPosition touchXY)
 // Updates the Rubik's Cube, called once per frame. The general workhorse function
 // of the class. Handles Grabbing/Twisting, and calls the Draw() function.
 //---------------------------------------------------------------------------------
-void RubiksCube::Update(bool moving, touchPosition touchXY, VECTOR touchVector)
+void RubiksCube::Update(bool moving, touchPosition touchXY, VECTOR touchVector, bool painting, int colour)
 {
+	Painting=painting;
+	paintColour=colour;
 	// somehow stumbled onto a good way to handle Twisting using states
 	// FUCK TOP-DOWN PLANNING; PROTOTYPING FTW!
 	if (moving && !Grabbing && !Twisting)
