@@ -329,7 +329,23 @@ void CubeGame::_drawPalette()
 				0.0, 0.0, 0.0,		//look at
 				0.0, 1.0, 0.0);		//up
 
+	Colour palette[6];
+	float size = 0.6;
+	mainCube.getPalette(palette);
+	glTranslate3f32(floattof32(-3.1), floattof32(0.9), 0);
 
+	glEnable(GL_OUTLINE);
+	glBegin(GL_QUADS);
+	for(int i=0; i<6; i++)
+	{
+		glColor3b(palette[i].r, palette[i].g, palette[i].b);
+		glVertex3f((i/3)*size,-(i%3)*size,0);
+		glVertex3f((i/3)*size+size,-(i%3)*size,0);
+		glVertex3f((i/3)*size+size,-(i%3)*size-size,0);
+		glVertex3f((i/3)*size,-(i%3)*size-size,0);
+	}
+	glEnd();
+	glDisable(GL_OUTLINE);
 }
 
 //-----------------------------------------------------------------------------
@@ -338,8 +354,9 @@ void CubeGame::_drawPalette()
 //-----------------------------------------------------------------------------
 void CubeGame::_drawShit()
 {
-	glLoadIdentity();
+	if(painting) _drawPalette();
 
+	glLoadIdentity();
 	gluLookAt(	0.0, 0.0, 3.5,		//camera position
 				0.0, 0.0, 0.0,		//look at
 				0.0, 1.0, 0.0);		//up
@@ -370,7 +387,6 @@ void CubeGame::_drawShit()
 			cube[0].Update(twisting, touchXY, touchVector, false, 0);
 
 			glLoadIdentity();
-
 			gluLookAt(	0.0, 0.0, 3.5,		//camera position
 						0.0, 0.0, 0.0,		//look at
 						0.0, 1.0, 0.0);		//up
@@ -381,7 +397,6 @@ void CubeGame::_drawShit()
 			cube[1].Update(twisting, touchXY, touchVector, false, 0);
 
 			glLoadIdentity();
-
 			gluLookAt(	0.0, 0.0, 3.5,		//camera position
 						0.0, 0.0, 0.0,		//look at
 						0.0, 1.0, 0.0);		//up
@@ -402,6 +417,7 @@ void CubeGame::_drawShit()
 				{
 					loading=false;
 					saving=false;
+					painting=false;
 					_switchScreens();
 					return;
 				}
