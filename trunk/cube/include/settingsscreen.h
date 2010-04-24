@@ -79,6 +79,7 @@ namespace WoopsiUI {
 		Button* btnQScramble;
 		Button* btnCredits;
 		Button* btnColour[6];
+		Button* btnPaint;
 		TabScreen* _pages;
 		WoopsiString strPage[6];
 		Settings settings;

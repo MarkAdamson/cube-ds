@@ -94,7 +94,7 @@ class RubiksCube
 	enum RC_Side {RC_LEFT, RC_BOTTOM, RC_BACK, RC_RIGHT, RC_TOP, RC_FRONT};
 	RubikTwist Twist; // Used in Twisting (duh)
 	int clicked[3]; // Picking: tracks which tile is currently picked
-	bool Picking, Grabbing, Twisting, AutoTwisting, Scrambling, Solving; //the four (plus one) stages of twisting
+	bool Picking, Grabbing, Twisting, AutoTwisting, Scrambling, Solving, Painting; //the four (plus one) stages of twisting
 	int scramblecount, solvecount;
 	int solution[][3];
 	Colour palette[6];
@@ -103,7 +103,7 @@ class RubiksCube
 	int32 Size;
 	Cubex solver;
 	float twistSensitivity, rotateSensitivity;
-	int controlStyle;
+	int controlStyle, paintColour;
 	
 	// these are used in picking a tile:
 	void startCheck();
@@ -144,7 +144,7 @@ class RubiksCube
 	void Move(int, int);
 	void Resize(float size);
 	void AutoTwist(int, int, bool);
-	void Update(bool, touchPosition, VECTOR);
+	void Update(bool, touchPosition, VECTOR, bool, int);
 };
 
 #endif
