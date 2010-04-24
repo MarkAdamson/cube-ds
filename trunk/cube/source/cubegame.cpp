@@ -83,8 +83,8 @@ void CubeGame::startup()
 	gfxSettings = oamAllocateGfx(&oamMain, SpriteSize_64x32,SpriteColorFormat_256Color);//make room for the sprite
 	dmaCopy(settingsbuttonTiles, gfxSettings, settingsbuttonTilesLen);//copy the sprite
 	dmaCopy(settingsbuttonPal, SPRITE_PALETTE, settingsbuttonPalLen); //copy the sprites palette
-	//gfxBack = oamAllocateGfx(&oamMain, SpriteSize_64x32, SpriteColorFormat_256Color);
-	//dmaCopy(backbuttonTiles, gfxBack, backbuttonTilesLen);
+	gfxBack = oamAllocateGfx(&oamMain, SpriteSize_64x32, SpriteColorFormat_256Color);
+	dmaCopy(backbuttonTiles, gfxBack, backbuttonTilesLen);
 	//dmaCopy(backbuttonPal, SPRITE_PALETTE, backbuttonPalLen);
 	oamEnable(&oamMain);
 
@@ -336,16 +336,16 @@ void CubeGame::_drawShit()
 	{
 		mainCube.Update(twisting, touchXY, touchVector);
 		oamSet(&oamMain,0,192,0,0,0,SpriteSize_64x32,SpriteColorFormat_256Color,gfxSettings,0,false,false,false,false,false);
-		//oamSet(&oamMain,0,256,0,0,0,SpriteSize_64x32,SpriteColorFormat_256Color,gfxBack,0,false,false,false,false,false);
+		oamSet(&oamMain,1,256,0,0,0,SpriteSize_64x32,SpriteColorFormat_256Color,gfxBack,0,false,false,false,false,false);
 
 
 	}else{
 		if(!saving && !loading)
 		{
 			mainCube.Update(twisting, touchXY, touchVector);
-			//oamSet(&oamMain,0,256,0,0,0,SpriteSize_64x32,SpriteColorFormat_256Color,gfxBack,0,false,false,false,false,false);
+			oamSet(&oamMain,1,256,0,0,0,SpriteSize_64x32,SpriteColorFormat_256Color,gfxBack,0,false,false,false,false,false);
 		}else{
-			//oamSet(&oamMain,0,192,0,0,0,SpriteSize_64x32,SpriteColorFormat_256Color,gfxBack,0,false,false,false,false,false);
+			oamSet(&oamMain,1,192,0,0,0,SpriteSize_64x32,SpriteColorFormat_256Color,gfxBack,0,false,false,false,false,false);
 
 			SLRotation+=100;
 			//SLRotation%=360;
