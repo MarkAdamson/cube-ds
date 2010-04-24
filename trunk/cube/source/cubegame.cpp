@@ -246,6 +246,7 @@ void CubeGame::_run()
 			if((oldXY.px >=192) && (oldXY.py <=32))
 			{
 				settings=!settings;
+				painting=false;
 				_switchScreens();
 				_drawShit();
 				return;
