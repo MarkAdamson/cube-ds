@@ -95,13 +95,25 @@ void CubeGame::startup()
 	// initialize gl
 	glInit();
 
+	glEnable(GL_OUTLINE | GL_ANTIALIAS);
+
+	//set the first outline color to white
+	glSetOutlineColor(0,RGB15(0,0,0));
+	glSetOutlineColor(1,RGB15(31,31,31));
+
+	// setup the rear plane
+	glClearColor(0,31,31,31); // set BG
+	glClearPolyID(63); // the BG and polygons will have the same ID unless a polygon is highlighted
+	glClearDepth(0x7FFF);
+
+	/*
 	// enable antialiasing
 	glEnable(GL_ANTIALIAS);
 
 	// setup the rear plane
 	glClearColor(0,31,31,31); // BG must be opaque for AA to work
 	glClearPolyID(63); // BG must have a unique polygon ID for AA to work
-	glClearDepth(0x7FFF);
+	glClearDepth(0x7FFF);*/
 
 	// Initialise variables
 	dx=0; dy=0;
@@ -117,11 +129,11 @@ void CubeGame::startup()
 	//change ortho vs perspective
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	gluPerspective(70, 256.0 / 192.0, 0.1, 10);
+	gluPerspective(70, 256.0 / 192.0, 0.1, 20);
 
-	glPolyFmt(POLY_ALPHA(31) | POLY_CULL_FRONT );
 	// Set the current matrix to be the model matrix
 	glMatrixMode(GL_MODELVIEW);
+	glPolyFmt(POLY_ALPHA(31) | POLY_CULL_FRONT | POLY_ID(0));
 
 	for(int i=0; i<3; i++)
 		cube[i].Reset();
@@ -334,19 +346,21 @@ void CubeGame::_drawPalette()
 	float size = 0.6;
 	mainCube.getPalette(palette);
 	glTranslate3f32(floattof32(-3.1), floattof32(0.9), 0);
-
-	glEnable(GL_OUTLINE);
-	glBegin(GL_QUADS);
 	for(int i=0; i<6; i++)
 	{
 		glColor3b(palette[i].r, palette[i].g, palette[i].b);
+		if(i==paintColour)
+			glPolyFmt(POLY_ALPHA(31) | POLY_CULL_FRONT | POLY_ID(8));
+		else
+			glPolyFmt(POLY_ALPHA(31) | POLY_CULL_FRONT | POLY_ID(0));
+		glBegin(GL_QUADS);
 		glVertex3f((i/3)*size,-(i%3)*size,0);
-		glVertex3f((i/3)*size+size,-(i%3)*size,0);
-		glVertex3f((i/3)*size+size,-(i%3)*size-size,0);
-		glVertex3f((i/3)*size,-(i%3)*size-size,0);
+		glVertex3f((i/3)*size+size*0.97,-(i%3)*size,0);
+		glVertex3f((i/3)*size+size*0.97,-(i%3)*size-size*0.97,0);
+		glVertex3f((i/3)*size,-(i%3)*size-size*0.97,0);
+		glEnd();
 	}
-	glEnd();
-	glDisable(GL_OUTLINE);
+	//glDisable(GL_OUTLINE);
 }
 
 //-----------------------------------------------------------------------------
@@ -355,12 +369,14 @@ void CubeGame::_drawPalette()
 //-----------------------------------------------------------------------------
 void CubeGame::_drawShit()
 {
+	glEnable(GL_OUTLINE);
 	if(painting) _drawPalette();
 
 	glLoadIdentity();
 	gluLookAt(	0.0, 0.0, 3.5,		//camera position
 				0.0, 0.0, 0.0,		//look at
 				0.0, 1.0, 0.0);		//up
+	glPolyFmt(POLY_ALPHA(31) | POLY_CULL_FRONT | POLY_ID(0));
 
 	// Update and draw the cube
 	if(!settings)
@@ -537,6 +553,7 @@ void CubeGame::handleActionEvent(const GadgetEventArgs& e)
 		_applySettings();
 		_saveSettings();
 		painting=true;
+		paintColour=0;
 		settings=!settings;
 		_switchScreens();
 		break;
