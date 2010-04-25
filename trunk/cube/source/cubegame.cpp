@@ -310,6 +310,8 @@ void CubeGame::_run()
 			// make the new value the old value
 			oldXY=touchXY;
 			
+			if(oldXY.px>=6 && oldXY.px < 54 && oldXY.py >= 60 && oldXY.py < 132) palTouch=true;
+			
 			// see if the user is trying to twist
 			if((held & KEY_L)||(held & KEY_R))
 			{
