@@ -5,7 +5,7 @@ $(error "Please set DEVKITARM in your environment. export DEVKITARM=<path to>dev
 endif
 
 GAME_TITLE	:=	Rubik's Cube for DS
-GAME_SUBTITLE1	:=	v0.2
+GAME_SUBTITLE1	:=	v0.7
 GAME_SUBTITLE2	:=	by Mark Adamson
 GAME_ICON      :=      ../cube2.bmp
 include $(DEVKITARM)/ds_rules
