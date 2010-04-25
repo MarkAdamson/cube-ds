@@ -242,6 +242,7 @@ void CubeGame::_run()
 	// Reset movement states
 	twisting=FALSE;
 	moving=FALSE;
+	bool palTouch = false;
 
 	// Scankeys already called by woopsi
 	int down = keysDown();
@@ -262,6 +263,20 @@ void CubeGame::_run()
 				_switchScreens();
 				_drawShit();
 				return;
+			}
+			// During Painting, register palette touches
+			if(painting)
+			{
+				if(oldXY.px>=6 && oldXY.px < 54 && oldXY.py >= 60 && oldXY.py < 132)
+				{
+					touchPosition tmpXY = oldXY;
+					tmpXY.px -= 6;
+					tmpXY.py -= 60;
+					
+					paintColour=tmpXY.py / 24;
+					if(tmpXY.px >=24) paintColour += 3;
+					palTouch=true;
+				}
 			}
 		}
 
@@ -300,7 +315,7 @@ void CubeGame::_run()
 			{
 				twisting=TRUE;
 			}else{
-				if(dx || dy)
+				if((dx || dy) && !palTouch)
 					moving=TRUE;
 			}
 
@@ -355,9 +370,9 @@ void CubeGame::_drawPalette()
 			glPolyFmt(POLY_ALPHA(31) | POLY_CULL_FRONT | POLY_ID(0));
 		glBegin(GL_QUADS);
 		glVertex3f((i/3)*size,-(i%3)*size,0);
-		glVertex3f((i/3)*size+size*0.97,-(i%3)*size,0);
-		glVertex3f((i/3)*size+size*0.97,-(i%3)*size-size*0.97,0);
-		glVertex3f((i/3)*size,-(i%3)*size-size*0.97,0);
+		glVertex3f((i/3)*size+size*0.9,-(i%3)*size,0);
+		glVertex3f((i/3)*size+size*0.9,-(i%3)*size-size*0.9,0);
+		glVertex3f((i/3)*size,-(i%3)*size-size*0.9,0);
 		glEnd();
 	}
 	//glDisable(GL_OUTLINE);
