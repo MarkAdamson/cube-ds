@@ -155,7 +155,7 @@ void SettingsScreen::buildMainPage()
 	label->setFont(new Gulimche12);
 	_pages->addGadgetToPage(0, label);
 
-	label = new Label(0, 20, _pages->getPageWidth(), 14, "v0.2 by Mark Adamson");
+	label = new Label(0, 20, _pages->getPageWidth(), 14, "v0.7 by Mark Adamson");
 	label->setBorderless(true);
 	_pages->addGadgetToPage(0, label);
 
