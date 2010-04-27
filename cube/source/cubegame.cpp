@@ -326,6 +326,12 @@ void CubeGame::_run()
 			// find the difference between old and new values
 			dx = touchXY.px - oldXY.px;
 			dy = touchXY.py - oldXY.py;
+			if((abs(dx)>20)||(abs(dy)>20))
+			{
+				dx=0;
+				dy=0;
+			}
+			
 			// make the new value the old value
 			oldXY=touchXY;
 			
@@ -336,7 +342,7 @@ void CubeGame::_run()
 			{
 				twisting=TRUE;
 			}else{
-				if((dx || dy) && !palTouch)
+				if((dx || dy) && !(palTouch && painting))
 					moving=TRUE;
 			}
 
