@@ -523,6 +523,7 @@ void CubeGame::_applySettings()
 		for(int j=0; j<3; j++)
 			cube[j].setColour(i, (_settingsscreen->settings.colour[i][0]+1)*8-1, (_settingsscreen->settings.colour[i][1]+1)*8-1, (_settingsscreen->settings.colour[i][2]+1)*8-1);
 	}
+	glClearColor(_settingsscreen->settings.bgColour[0], _settingsscreen->settings.bgColour[1], _settingsscreen->settings.bgColour[2], 31);
 }
 
 //------------------------------------------------------------------------------

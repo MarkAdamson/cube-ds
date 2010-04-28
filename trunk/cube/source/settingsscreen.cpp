@@ -83,6 +83,10 @@ void SettingsScreen::setDefaultColours()
 	settings.colour[5][0]=0;
 	settings.colour[5][1]=0;
 	settings.colour[5][2]=31;
+	//Background:
+	settings.bgColour[0]=0;
+	settings.bgColour[1]=31;
+	settings.bgColour[2]=31;
 }
 
 void SettingsScreen::revertSettings()
@@ -94,6 +98,7 @@ void SettingsScreen::revertSettings()
 	{
 		btnColour[i]->setBackColour(woopsiRGB(settings.colour[i][0], settings.colour[i][1], settings.colour[i][2]));
 	}
+	btnBackgroundColour->setBackColour(woopsiRGB(settings.bgColour[0], settings.bgColour[1], settings.bgColour[2]));
 }
 
 void SettingsScreen::updateSettings()
@@ -108,6 +113,10 @@ void SettingsScreen::updateSettings()
 		settings.colour[i][1]=((tmpColour >> 5) & (u8)31);
 		settings.colour[i][2]=((tmpColour >> 10) & (u8)31);
 	}
+	u16 tmpColour = btnBackgroundColour->getBackColour();
+	settings.bgColour[0]=(tmpColour & (u8)31);
+	settings.bgColour[1]=((tmpColour >> 5) & (u8)31);
+	settings.bgColour[2]=((tmpColour >> 10) & (u8)31);
 }
 
 void SettingsScreen::drawContents(GraphicsPort* port) {
@@ -337,9 +346,18 @@ void SettingsScreen::buildPainterPage()
 
 void SettingsScreen::buildBackgroundPage()
 {
-Label* label = new Label(0, 0, _pages->getPageWidth(), _pages->getPageHeight(), "Background Page - Under Construction");
-label->setBorderless(true);
-_pages->addGadgetToPage(5, label);
+	RadioButtonGroup* rbgBackgroundType = new RadioButtonGroup(190, 60);
+	rbgBackgroundType->newRadioButton(0, 0, 10, 10);
+	rbgBackgroundType->setSelectedIndex(0);
+	rbgBackgroundType->setRefcon(50);
+	rbgBackgroundType->addGadgetEventHandler(this);
+	_pages->addGadgetToPage(5, rbgControlStyle);
+	
+	btnBackgroundColour = new Button(10, 10, 30, 30, "");
+	btnBackgroundColour->setBackColour(woopsiRGB(settings.bgColour[0], settings.bgColour[1], settings.bgColour[2]));
+	btnBackgroundColour->setRefcon(51);
+	btnBackgroundColour->addGadgetEventHandler(this);
+	_pages->addGadgetToPage(5, btnBackgroundColour);
 }
 
 
@@ -371,7 +389,7 @@ void SettingsScreen::handleActionEvent(const GadgetEventArgs& e)
 {
 	int refcon=e.getSource()->getRefcon();
 	
-	if(refcon>=40)
+	if(refcon>=40 && refcon<50)
 	{
 		ColourPicker* pick = new ColourPicker(27, 55, 200, 80, "Colour Picker", btnColour[refcon-40]->getBackColour(), GADGET_DRAGGABLE);
 		pick->setRefcon(refcon-40);
@@ -379,6 +397,14 @@ void SettingsScreen::handleActionEvent(const GadgetEventArgs& e)
 		addGadget(pick);
 		pick->goModal();
 		//pick->redraw();
+	}
+	if(refcon==51)
+	{
+		ColourPicker* pick = new ColourPicker(27, 55, 200, 80, "Choose Background Colour", e.getSource()->getBackColour(), GADGET_DRAGGABLE);
+		pick->setRefcon(refcon);
+		pick->addGadgetEventHandler(this);
+		addGadget(pick);
+		pick->goModal();
 	}
 }
 
@@ -389,5 +415,7 @@ void SettingsScreen::handleValueChangeEvent(const GadgetEventArgs& e)
 		int refcon=e.getSource()->getRefcon();
 		if(refcon<6)
 			btnColour[refcon]->setBackColour(((ColourPicker*)e.getSource())->getColour());
+		if(refcon==51)
+			btnBackgroundColour->setBackColour(((ColourPicker*)e.getSource())->getColour());
 	}
 }

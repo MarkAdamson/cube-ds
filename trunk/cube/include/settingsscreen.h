@@ -35,6 +35,7 @@ enum SS_Pages {SS_TITLE, SS_GAME, SS_CONTROL, SS_SOLVE, SS_BACKGROUND, SS_PAINTE
 		int twistSensitivity;
 		int controlStyle;
 		int colour[6][3];
+		int bgColour[3];
 	}Settings;
 
 namespace WoopsiUI {
@@ -99,6 +100,7 @@ namespace WoopsiUI {
 		Button* btnCredits;
 		Button* btnColour[6];
 		Button* btnPaint;
+		Button* btnBackgroundColour;
 		TabScreen* _pages;
 		WoopsiString strPage[6];
 		Settings settings;
