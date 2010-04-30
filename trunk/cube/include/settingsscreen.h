@@ -147,12 +147,12 @@ namespace WoopsiUI {
 		 */
 		void buildGUI();
 		
-		void buildMainPage();
 		void buildGamePage();
 		void buildControlPage();
-		void buildSolvePage();
-		void buildPainterPage();
 		void buildBackgroundPage();
+		void buildCreditsPage();
+		void buildPainterPage();
+		void buildSolvePage();
 		
 		// Gadget handler for Woopsi button presses
 		void handleActionEvent(const WoopsiUI::GadgetEventArgs&);

@@ -160,69 +160,20 @@ void SettingsScreen::buildGUI() {
 	pageRect.height-=20;
 	
 	_pages = new TabScreen(pageRect.x+1, pageRect.y+1, pageRect.width-2, pageRect.height-3, 6, 0);
-	WoopsiString title[6] = {"Main", "Game", "Control", "Solve", "Painter", "Backgrd"};
+	WoopsiString title[6] = {"Game", "Control", "Backgrd", "Credits", "Modify Cube", "Solve Cube"};
 	for(int i=0; i<6; i++)
 	{
 		_pages->nameTab(i, title[i]);
 	}
 	
-	buildMainPage();
 	buildGamePage();
 	buildControlPage();
+	buildBackgroundPage();
+	buildCreditsPage();
 	buildSolvePage();
 	buildPainterPage();
-	buildBackgroundPage();
 	
 	addGadget(_pages);
-}
-
-void SettingsScreen::buildMainPage()
-{
-	Label* label = new Label(0, 0, 254, 20, "KICK-ASS RUBIK'S CUBE FOR DS");
-	label->setBorderless(true);
-	label->setFont(new Gulimche12);
-	_pages->addGadgetToPage(0, label);
-
-	label = new Label(0, 20, _pages->getPageWidth(), 14, "v0.7 by Mark Adamson");
-	label->setBorderless(true);
-	_pages->addGadgetToPage(0, label);
-
-	mebmp* bmwMe = new mebmp();
-	Image* image = new Image((_pages->getPageWidth()-100)/2, (_pages->getPageHeight()-80)/2+10, 100, 80, 0, 0, bmwMe, GADGET_BORDERLESS);
-	_pages->addGadgetToPage(0, image);
-
-	label = new Label(0, _pages->getPageHeight()/2, (_pages->getPageWidth()-100)/2, 14, "Created by");
-	label->setBorderless(true);
-	_pages->addGadgetToPage(0, label);
-
-	label = new Label(0, _pages->getPageHeight()/2+14, (_pages->getPageWidth()-100)/2, 14, "This Guy-->");
-	label->setBorderless(true);
-	_pages->addGadgetToPage(0, label);
-
-	label = new Label((_pages->getPageWidth()-100)/2+100, _pages->getPageHeight()/2, (_pages->getPageWidth()-100)/2, 14, "Inspired by");
-	label->setBorderless(true);
-	_pages->addGadgetToPage(0, label);
-
-	label = new Label((_pages->getPageWidth()-100)/2+100, _pages->getPageHeight()/2+14, (_pages->getPageWidth()-100)/2, 14, "<--This Guy");
-	label->setBorderless(true);
-	_pages->addGadgetToPage(0, label);
-
-
-	btnQScramble = new Button(3, (_pages->getPageHeight()-80)/2+10, 70, 25, "SCRAMBLE");
-	btnQScramble->setRefcon(94);
-	_pages->addGadgetToPage(0, btnQScramble);
-
-	btnPlay = new Button(_pages->getPageWidth()-73, (_pages->getPageHeight()-80)/2+10, 70, 25, "PLAY");
-	btnPlay->setRefcon(95);
-	_pages->addGadgetToPage(0, btnPlay);
-
-	btnQLoad = new Button(8, _pages->getPageHeight()-28, 60, 20, "Load");
-	btnQLoad->setRefcon(96);
-	_pages->addGadgetToPage(0, btnQLoad);
-
-	btnCredits = new Button(_pages->getPageWidth()-68, _pages->getPageHeight()-28, 60, 20, "Credits");
-	btnCredits->setRefcon(97);
-	_pages->addGadgetToPage(0, btnCredits);
 }
 
 
@@ -231,24 +182,24 @@ void SettingsScreen::buildGamePage()
 	Label* label = new Label(0, 0, 254, 20, "GAME OPTIONS");
 	label->setBorderless(true);
 	label->setFont(new Gulimche12);
-	_pages->addGadgetToPage(1, label);
+	_pages->addGadgetToPage(0, label);
 
 	//Save Button
 	btnSave = new Button(22, 35, 70, 30, "SAVE");
 	btnSave->setRefcon(10);
-	_pages->addGadgetToPage(1, btnSave);
+	_pages->addGadgetToPage(0, btnSave);
 	
 	btnLoad = new Button(92, 35, 70, 30, "LOAD");
 	btnLoad->setRefcon(11);
-	_pages->addGadgetToPage(1, btnLoad);
+	_pages->addGadgetToPage(0, btnLoad);
 	
 	btnReset = new Button(162, 35, 70, 30, "RESET");
 	btnReset->setRefcon(12);
-	_pages->addGadgetToPage(1, btnReset);
+	_pages->addGadgetToPage(0, btnReset);
 	
 	btnScramble = new Button(92, 65, 70, 30, "SCRAMBLE");
 	btnScramble->setRefcon(13);
-	_pages->addGadgetToPage(1, btnScramble);
+	_pages->addGadgetToPage(0, btnScramble);
 }
 
 void SettingsScreen::buildControlPage()
@@ -256,12 +207,12 @@ void SettingsScreen::buildControlPage()
 	Label* label = new Label(0, 0, 254, 20, "CONTROL SETTINGS");
 	label->setBorderless(true);
 	label->setFont(new Gulimche12);
-	_pages->addGadgetToPage(2, label);
+	_pages->addGadgetToPage(1, label);
 
 	label = new Label(20, 32, 150, 14, "Movement Sensitivity:");
 	label->setBorderless(true);
 	//label->setTextAlignmentHoriz(TEXT_ALIGNMENT_HORIZ_LEFT);
-	_pages->addGadgetToPage(2, label);
+	_pages->addGadgetToPage(1, label);
 
 	sldRotateSensitivity = new SliderHorizontal(20, 46, 150, 10);
 	sldRotateSensitivity->setMinimumValue(0);
@@ -269,12 +220,12 @@ void SettingsScreen::buildControlPage()
 	sldRotateSensitivity->setValue(10);
 	sldRotateSensitivity->setRefcon(20);
 	sldRotateSensitivity->addGadgetEventHandler(this);
-	_pages->addGadgetToPage(2, sldRotateSensitivity);
+	_pages->addGadgetToPage(1, sldRotateSensitivity);
 
 	label = new Label(20, 68, 150, 14, "Twisting Sensitivity:");
 	label->setBorderless(true);
 	//label->setTextAlignmentHoriz(1);
-	_pages->addGadgetToPage(2, label);
+	_pages->addGadgetToPage(1, label);
 
 	sldTwistSensitivity = new SliderHorizontal(20, 82, 150, 10);
 	sldTwistSensitivity->setMinimumValue(0);
@@ -282,24 +233,24 @@ void SettingsScreen::buildControlPage()
 	sldTwistSensitivity->setValue(10);
 	sldTwistSensitivity->setRefcon(21);
 	sldTwistSensitivity->addGadgetEventHandler(this);
-	_pages->addGadgetToPage(2, sldTwistSensitivity);
+	_pages->addGadgetToPage(1, sldTwistSensitivity);
 
 	label = new Label(180, 32, 64, 14, "Control");
 	label->setBorderless(true);
 	//label->setTextAlignmentHoriz(1);
-	_pages->addGadgetToPage(2, label);
+	_pages->addGadgetToPage(1, label);
 	label = new Label(180, 46, 64, 14, "Style:");
 	label->setBorderless(true);
 	//label->setTextAlignmentHoriz(1);
-	_pages->addGadgetToPage(2, label);
+	_pages->addGadgetToPage(1, label);
 	label = new Label(205, 61, 14, 14, "A");
 	label->setBorderless(true);
 	//label->setTextAlignmentHoriz(1);
-	_pages->addGadgetToPage(2, label);
+	_pages->addGadgetToPage(1, label);
 	label = new Label(205, 77, 14, 14, "B");
 	label->setBorderless(true);
 	//label->setTextAlignmentHoriz(1);
-	_pages->addGadgetToPage(2, label);
+	_pages->addGadgetToPage(1, label);
 
 	rbgControlStyle = new RadioButtonGroup(190, 60);
 	rbgControlStyle->newRadioButton(0, 0, 10, 10);
@@ -307,22 +258,55 @@ void SettingsScreen::buildControlPage()
 	rbgControlStyle->setSelectedIndex(0);
 	rbgControlStyle->setRefcon(22);
 	rbgControlStyle->addGadgetEventHandler(this);
-	_pages->addGadgetToPage(2, rbgControlStyle);
+	_pages->addGadgetToPage(1, rbgControlStyle);
 }
 
-void SettingsScreen::buildSolvePage()
+
+void SettingsScreen::buildBackgroundPage()
 {
-Label* label = new Label(0, 0, _pages->getPageWidth(), _pages->getPageHeight(), "Solve Page - Under Construction");
-label->setBorderless(true);
-_pages->addGadgetToPage(3, label);
+	Label* label = new Label(0, 0, 254, 20, "BACKGROUND SETTINGS");
+	label->setBorderless(true);
+	label->setFont(new Gulimche12);
+	_pages->addGadgetToPage(2, label);
+
+	RadioButtonGroup* rbgBackgroundType = new RadioButtonGroup(10, 30);
+	rbgBackgroundType->newRadioButton(0, 0, 8, 8);
+	rbgBackgroundType->newRadioButton(0, 14, 8, 8);
+	rbgBackgroundType->setSelectedIndex(0);
+	rbgBackgroundType->setRefcon(50);
+	rbgBackgroundType->addGadgetEventHandler(this);
+	_pages->addGadgetToPage(2, rbgBackgroundType);
+
+	label = new Label(25, 30, 50, 14, "Colour:");
+	label->setBorderless(true);
+	_pages->addGadgetToPage(2, label);
+	label = new Label(25, 44, 50, 14, "File:");
+	label->setBorderless(true);
+	_pages->addGadgetToPage(2, label);
+
+	btnBackgroundColour = new Button(75, 27, 30, 14, "");
+	btnBackgroundColour->setBackColour(woopsiRGB(settings.bgColour[0], settings.bgColour[1], settings.bgColour[2]));
+	btnBackgroundColour->setRefcon(51);
+	btnBackgroundColour->addGadgetEventHandler(this);
+	_pages->addGadgetToPage(2, btnBackgroundColour);
+}
+
+void SettingsScreen::buildCreditsPage()
+{
+	Label* label = new Label(0, 0, 254, 20, "CREDITS");
+	label->setBorderless(true);
+	label->setFont(new Gulimche12);
+	_pages->addGadgetToPage(3, label);
+
 }
 
 
 void SettingsScreen::buildPainterPage()
 {
-	//Label* label = new Label(0, 0, _pages->getPageWidth(), _pages->getPageHeight(), "Painter Page - Under Construction");
-	//label->setBorderless(true);
-	//_pages->addGadgetToPage(4, label);
+	Label* label = new Label(0, 0, 254, 20, "CUBE LAYOUT EDITOR");
+	label->setBorderless(true);
+	label->setFont(new Gulimche12);
+	_pages->addGadgetToPage(4, label);
 
 	for(u8 i=0; i<6; i++)
 	{
@@ -343,21 +327,16 @@ void SettingsScreen::buildPainterPage()
 	_pages->addGadgetToPage(4, btnColour[0]);*/
 }
 
-
-void SettingsScreen::buildBackgroundPage()
+void SettingsScreen::buildSolvePage()
 {
-	RadioButtonGroup* rbgBackgroundType = new RadioButtonGroup(190, 60);
-	rbgBackgroundType->newRadioButton(0, 0, 10, 10);
-	rbgBackgroundType->setSelectedIndex(0);
-	rbgBackgroundType->setRefcon(50);
-	rbgBackgroundType->addGadgetEventHandler(this);
-	_pages->addGadgetToPage(5, rbgControlStyle);
-	
-	btnBackgroundColour = new Button(10, 10, 30, 30, "");
-	btnBackgroundColour->setBackColour(woopsiRGB(settings.bgColour[0], settings.bgColour[1], settings.bgColour[2]));
-	btnBackgroundColour->setRefcon(51);
-	btnBackgroundColour->addGadgetEventHandler(this);
-	_pages->addGadgetToPage(5, btnBackgroundColour);
+	Label* label = new Label(0, 0, 254, 20, "CUBE SOLVER");
+	label->setBorderless(true);
+	label->setFont(new Gulimche12);
+	_pages->addGadgetToPage(5, label);
+
+	//label = new Label(0, 0, _pages->getPageWidth(), _pages->getPageHeight(), "Solve Page - Under Construction");
+	//label->setBorderless(true);
+	//_pages->addGadgetToPage(5, label);
 }
 
 

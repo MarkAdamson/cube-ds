@@ -20,6 +20,7 @@
 #include "woopsi.h"
 #include "rubikscube.h"
 #include "button.h"
+#include "scrollingpanel.h"
 #include "settingsscreen.h"
 
 
@@ -51,6 +52,7 @@ private:
 	//SettingsScreen* _settingsscreen;
 	// Woopsi buttons
 	Button* btn_Return;
+	ScrollingPanel* titleScreen;
 	
 	// Modified to include glflush:
 	void processOneVBL(Gadget*);
@@ -66,6 +68,7 @@ private:
 	void _applySettings();
 	void _loadCube(int cuben);
 	void _saveCube(int cuben);
+	void _buildTitleScreen();
 	
 	// Gadget handler for Woopsi button presses
 	void handleActionEvent(const WoopsiUI::GadgetEventArgs&);

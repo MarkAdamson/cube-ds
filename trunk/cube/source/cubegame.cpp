@@ -19,14 +19,21 @@
 
 // Includes
 #include "cubegame.h"
+
 #include "screen.h"
 #include "amigawindow.h"
 #include "button.h"
+#include "scrollingpanel.h"
+#include "fonts/gulimche12.h"
 #include "gadgeteventhandler.h"
 #include "woopsifuncs.h"
+
 #include "settingsscreen.h"
 #include "settingsbutton.h"
 #include "backbutton.h"
+#include "image.h"
+#include "mebmp.h"
+
 #include "sys/stat.h"
 #include "dirent.h"
 #include "fat.h"
@@ -64,7 +71,11 @@ void CubeGame::startup()
 	_settingsscreen->btnCredits->addGadgetEventHandler(this);
 	_settingsscreen->btnPaint->addGadgetEventHandler(this);
 
+	_buildTitleScreen();
+	//titleScreen->goModal();
+
 	screen->addGadget(_settingsscreen);
+	screen->addGadget(titleScreen);
 
 	// Ensure Woopsi can draw itself
 	enableDrawing();
@@ -158,6 +169,62 @@ void CubeGame::startup()
 		cube[i].Reset();
 	_loadSettings();
 
+
+}
+
+void CubeGame::_buildTitleScreen()
+{
+	titleScreen = new ScrollingPanel(0, 0, 256, 192, GADGET_BORDERLESS);
+
+	Label* label = new Label(0, 0, 254, 20, "KICK-ASS RUBIK'S CUBE FOR DS");
+	label->setBorderless(true);
+	label->setFont(new Gulimche12);
+	titleScreen->addGadget(label);
+
+	label = new Label(0, 20, 256, 14, "v0.7 by Mark Adamson");
+	label->setBorderless(true);
+	titleScreen->addGadget(label);
+
+	mebmp* bmwMe = new mebmp();
+	Image* image = new Image(78, 66, 100, 80, 0, 0, bmwMe, GADGET_BORDERLESS);
+	titleScreen->addGadget(image);
+
+	label = new Label(0, 96, 78, 14, "Created by");
+	label->setBorderless(true);
+	titleScreen->addGadget(label);
+
+	label = new Label(0, 110, 78, 14, "This Guy-->");
+	label->setBorderless(true);
+	titleScreen->addGadget(label);
+
+	label = new Label(178, 96, 78, 14, "Inspired by");
+	label->setBorderless(true);
+	titleScreen->addGadget(label);
+
+	label = new Label(178, 110, 78, 14, "<--This Guy");
+	label->setBorderless(true);
+	titleScreen->addGadget(label);
+
+
+	Button* button = new Button(3, 40, 70, 25, "SCRAMBLE");
+	button->setRefcon(94);
+	button->addGadgetEventHandler(this);
+	titleScreen->addGadget(button);
+
+	button = new Button(183, 40, 70, 25, "PLAY");
+	button->setRefcon(95);
+	button->addGadgetEventHandler(this);
+	titleScreen->addGadget(button);
+
+	button = new Button(8, 164, 60, 20, "Load");
+	button->setRefcon(96);
+	button->addGadgetEventHandler(this);
+	titleScreen->addGadget(button);
+
+	button = new Button(188, 164, 60, 20, "Settings");
+	button->setRefcon(97);
+	button->addGadgetEventHandler(this);
+	titleScreen->addGadget(button);
 }
 
 void CubeGame::_loadSettings()
@@ -606,6 +673,7 @@ void CubeGame::handleActionEvent(const GadgetEventArgs& e)
 		_applySettings();
 		_saveSettings();
 		settings=!settings;
+		titleScreen->hide();
 		_switchScreens();
 		break;
 	case 95: //Play
@@ -613,13 +681,16 @@ void CubeGame::handleActionEvent(const GadgetEventArgs& e)
 		_applySettings();
 		_saveSettings();
 		settings=!settings;
+		titleScreen->hide();
 		_switchScreens();
 		break;
 	case 96: //Quick Load;
-		//Coming Soon!
+		loading=true;
+		titleScreen->hide();
+		_switchScreens();
 		break;
-	case 97: //Credits
-		//Coming Soonish!
+	case 97: //Settings
+		titleScreen->hide();
 		break;
 	case 98:
 		_settingsscreen->revertSettings();
