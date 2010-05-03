@@ -37,6 +37,10 @@ private:
 	bool moving, twisting, settings, saving, loading, switching, painting;
 	u16* gfxSettings;
 	u16* gfxBack;
+	u16* gfxUndo;
+	u16* gfxRedo;
+	u16* gfxCancel;
+	u16* gfxOk;
 	
 	// Variables for the game controls
 	int dx, dy;
@@ -61,6 +65,8 @@ private:
 	void _test();
 	void _switchScreens();
 	void _drawPalette();
+	void _showPainterGUI();
+	void _hidePainterGUI();
 	void _drawShit();
 	void _run();
 	void _loadSettings();
