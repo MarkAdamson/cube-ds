@@ -16,12 +16,6 @@
  * You should have received a copy of the GNU General Public License
  * along with cube-ds.  If not, see <http://www.gnu.org/licenses/>.
  */
- 
-/*
- * rubikscube.cpp
- * A Rubik's Cube class
- * by Mark Adamson
- */
 
 #include <nds.h>
 #include <nds/arm9/postest.h>
@@ -160,6 +154,26 @@ void RubiksCube::setDefaultColours()
 void RubiksCube::SetRCColor(int colourIndex)
 {
 	glColor3b(palette[colourIndex].r, palette[colourIndex].g, palette[colourIndex].b);
+}
+
+void RubiksCube::undoPaint()
+{
+	if(undoQueue.currentEntry>=0)
+	{
+		//RubikPaint tmpE = undoQueue.entry[undoQueue.currentEntry];
+		Side[undoQueue.entry[undoQueue.currentEntry].position[0]].tile[undoQueue.entry[undoQueue.currentEntry].position[1]][undoQueue.entry[undoQueue.currentEntry].position[2]].color=undoQueue.entry[undoQueue.currentEntry].from;
+		undoQueue.currentEntry--;
+	}
+}
+
+void RubiksCube::redoPaint()
+{
+	if(undoQueue.currentEntry<(undoQueue.numEntries-1))
+	{
+		//RubikPaint tmpE = undoQueue.entry[undoQueue.currentEntry+1];
+		undoQueue.currentEntry++;
+		Side[undoQueue.entry[undoQueue.currentEntry].position[0]].tile[undoQueue.entry[undoQueue.currentEntry].position[1]][undoQueue.entry[undoQueue.currentEntry].position[2]].color=undoQueue.entry[undoQueue.currentEntry].to;
+	}
 }
 
 //---------------------------------------------------------------------------------
@@ -665,6 +679,7 @@ void RubiksCube::Reset()
 	Side[RC_FRONT].tile[0][0].color=RC_WHITE;*/
 	rx=45;
 	ry=45;
+	undoQueue.numEntries=0;
 }
 
 void RubiksCube::getLayout(RubikSide* output)
@@ -978,7 +993,37 @@ void RubiksCube::Draw(touchPosition touchXY)
 		{
 			if(Painting)
 			{
-				Side[clicked[0]].tile[clicked[1]][clicked[2]].color=paintColour;
+				if(Side[clicked[0]].tile[clicked[1]][clicked[2]].color!=paintColour)
+				{
+					if(undoQueue.numEntries==0)
+					{
+						undoQueue.numEntries++;
+						undoQueue.currentEntry=0;
+					}
+					else if(undoQueue.currentEntry < (undoQueue.numEntries-1))
+					{
+						undoQueue.currentEntry++;
+						undoQueue.numEntries=undoQueue.currentEntry+1;
+					}
+					else if(undoQueue.numEntries==20)
+					{
+						for(int i=0; i<19; i++)
+						{
+						undoQueue.entry[i]=undoQueue.entry[i+1];
+						}
+					}
+					else
+					{
+						undoQueue.numEntries++;
+						undoQueue.currentEntry++;
+					}
+					undoQueue.entry[undoQueue.currentEntry].from=Side[clicked[0]].tile[clicked[1]][clicked[2]].color;
+					undoQueue.entry[undoQueue.currentEntry].to=paintColour;
+					for(int i=0; i<3; i++)
+						undoQueue.entry[undoQueue.currentEntry].position[i]=clicked[i];
+				
+					Side[clicked[0]].tile[clicked[1]][clicked[2]].color=paintColour;
+				}
 			}else{
 				Grabbing=true;
 				Picking=false;
@@ -997,6 +1042,11 @@ void RubiksCube::Update(bool moving, touchPosition touchXY, VECTOR touchVector, 
 {
 	Painting=painting;
 	paintColour=colour;
+	if(!painting)
+	{
+		undoQueue.numEntries=0;
+		undoQueue.currentEntry=-1;
+	}
 	// somehow stumbled onto a good way to handle Twisting using states
 	// FUCK TOP-DOWN PLANNING; PROTOTYPING FTW!
 	if (moving && !Grabbing && !Twisting)

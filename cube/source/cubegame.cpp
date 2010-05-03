@@ -17,7 +17,6 @@
  * along with cube-ds.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-// Includes
 #include "cubegame.h"
 
 #include "screen.h"
@@ -37,7 +36,6 @@
 #include "ok.h"
 #include "image.h"
 #include "mebmp.h"
-#include "spritebutton.h"
 
 #include "sys/stat.h"
 #include "dirent.h"
@@ -46,6 +44,7 @@
 
 int SLRotation;
 int paintColour;
+RubikSide oldLayout[6];
 
 void CubeGame::startup()
 {
@@ -75,6 +74,7 @@ void CubeGame::startup()
 	_settingsscreen->btnQLoad->addGadgetEventHandler(this);
 	_settingsscreen->btnCredits->addGadgetEventHandler(this);
 	_settingsscreen->btnPaint->addGadgetEventHandler(this);
+	_settingsscreen->btnApplyColours->addGadgetEventHandler(this);
 
 	_buildTitleScreen();
 	//titleScreen->goModal();
@@ -151,15 +151,6 @@ void CubeGame::startup()
 	glClearColor(0,31,31,31); // set BG
 	glClearPolyID(63); // the BG and polygons will have the same ID unless a polygon is highlighted
 	glClearDepth(0x7FFF);
-
-	/*
-	// enable antialiasing
-	glEnable(GL_ANTIALIAS);
-
-	// setup the rear plane
-	glClearColor(0,31,31,31); // BG must be opaque for AA to work
-	glClearPolyID(63); // BG must have a unique polygon ID for AA to work
-	glClearDepth(0x7FFF);*/
 
 	// Initialise variables
 	dx=0; dy=0;
@@ -383,9 +374,26 @@ void CubeGame::_run()
 					palTouch=true;
 				}
 
-				//if(oldXY.px>=10 && oldXY.px < 42 && oldXY.py >= 10 && oldXY.py < 42) //undo
-				//if(oldXY.px>=47 && oldXY.px < 79 && oldXY.py >= 10 && oldXY.py < 42) //redo
-				//if(oldXY.px 60 && oldXY.py >= 172) //cancel
+				if(oldXY.px>=10 && oldXY.px < 42 && oldXY.py >= 10 && oldXY.py < 42) //undo
+				{
+					mainCube.undoPaint();
+					palTouch=true;
+				}
+				if(oldXY.px>=47 && oldXY.px < 79 && oldXY.py >= 10 && oldXY.py < 42) //redo
+				{
+					mainCube.redoPaint();
+					palTouch=true;
+				}
+				if(oldXY.px < 60 && oldXY.py >= 172) //cancel
+				{
+					settings=!settings;
+					painting=false;
+					mainCube.setLayout(oldLayout);
+					_switchScreens();
+					_drawShit();
+					_hidePainterGUI();
+					return;
+				}
 				if(oldXY.px>=196 && oldXY.py >= 172) //ok
 				{
 					settings=!settings;
@@ -434,7 +442,10 @@ void CubeGame::_run()
 			// make the new value the old value
 			oldXY=touchXY;
 			
-			if(oldXY.px>=6 && oldXY.px < 54 && oldXY.py >= 60 && oldXY.py < 132) palTouch=true;
+			if((oldXY.px>=6 && oldXY.px < 54 && oldXY.py >= 60 && oldXY.py < 132) ||
+			(oldXY.px>=5 && oldXY.px < 37 && oldXY.py >= 5 && oldXY.py < 37) ||
+			(oldXY.px>=42 && oldXY.px < 74 && oldXY.py >= 5 && oldXY.py < 37))
+				palTouch=true;
 			
 			// see if the user is trying to twist
 			if((held & KEY_L)||(held & KEY_R))
@@ -708,6 +719,10 @@ void CubeGame::handleActionEvent(const GadgetEventArgs& e)
 	case 13:
 		mainCube.Scramble();
 		break;
+	case 47: //Apply Colours
+		_settingsscreen->updateColours();
+		_applySettings();
+		break;
 	case 48: //Paint
 		_settingsscreen->updateSettings();
 		_applySettings();
@@ -717,6 +732,7 @@ void CubeGame::handleActionEvent(const GadgetEventArgs& e)
 		paintColour=0;
 		_showPainterGUI();
 
+		mainCube.getLayout(oldLayout);
 		settings=!settings;
 		_switchScreens();
 		break;

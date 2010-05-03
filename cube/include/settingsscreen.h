@@ -83,10 +83,14 @@ namespace WoopsiUI {
 		 * @param rect Reference to a rect to populate with data.
 		 */
 		virtual void getPreferredDimensions(Rect& rect) const;
+
+		void revertColours();
+
+		void updateColours();
 		
-		virtual void revertSettings();
+		void revertSettings();
 		
-		virtual void updateSettings();
+		void updateSettings();
 		
 		Button* _btnOk;						/**< Pointer to the left arrow */
 		Button* _btnCancel;
@@ -142,10 +146,6 @@ namespace WoopsiUI {
 		virtual ~SettingsScreen();
 
 		void setDefaultColours();
-
-		void revertColours();
-
-		void updateColours();
 
 		/**
 		 * Creates all gadgets but leaves them textless.
