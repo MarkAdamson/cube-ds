@@ -331,6 +331,7 @@ void SettingsScreen::buildPainterPage()
 
 	Button* button = new Button(width-60-offset, 30, 60, 20, "Reset");
 	button->setRefcon(46);
+	button->addGadgetEventHandler(this);
 	_pages->addGadgetToPage(4, button);
 
 	btnApplyColours = new Button(width-60-offset, 50, 60, 20, "Apply");
@@ -400,7 +401,9 @@ void SettingsScreen::handleActionEvent(const GadgetEventArgs& e)
 	if(refcon==46)
 	{
 		setDefaultColours();
-		revertColours();
+		for(int i=0; i<6; i++)
+			btnColour[i]->setBackColour(woopsiRGB(settings.colour[i][0], settings.colour[i][1], settings.colour[i][2]));
+		redraw();
 	}
 	if(refcon==51)
 	{

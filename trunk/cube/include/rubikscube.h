@@ -100,6 +100,21 @@ typedef struct
 	MidSegment middle;
 }RubikTwist;
 
+typedef struct
+{
+	int position[3];
+	int from;
+	int to;
+}RubikPaint;
+
+typedef struct
+{
+	int numEntries;
+	int currentEntry;
+	RubikPaint entry[20];
+}RubikPaintQueue;
+	
+
 class RubiksCube
 {
 	private:
@@ -117,6 +132,7 @@ class RubiksCube
 	Cubex solver;
 	float twistSensitivity, rotateSensitivity;
 	int controlStyle, paintColour;
+	RubikPaintQueue undoQueue;
 	
 	// these are used in picking a tile:
 	void startCheck();
@@ -149,6 +165,8 @@ class RubiksCube
 	void setTwistSensitivity(int newValue);
 	void setControlStyle(int);
 	void setColour(int, int r, int g, int b);
+	void undoPaint();
+	void redoPaint();
 	bool isBusy();
 	void Scramble();
 	void Solve();
