@@ -101,6 +101,7 @@ namespace WoopsiUI {
 		Button* btnColour[6];
 		Button* btnPaint;
 		Button* btnBackgroundColour;
+		Button* btnApplyColours;
 		TabScreen* _pages;
 		WoopsiString strPage[6];
 		Settings settings;
@@ -141,6 +142,10 @@ namespace WoopsiUI {
 		virtual ~SettingsScreen();
 
 		void setDefaultColours();
+
+		void revertColours();
+
+		void updateColours();
 
 		/**
 		 * Creates all gadgets but leaves them textless.

@@ -89,11 +89,8 @@ void SettingsScreen::setDefaultColours()
 	settings.bgColour[2]=31;
 }
 
-void SettingsScreen::revertSettings()
+void SettingsScreen::revertColours()
 {
-	sldRotateSensitivity->setValue(settings.rotateSensitivity-10);
-	sldTwistSensitivity->setValue(settings.twistSensitivity-10);
-	rbgControlStyle->setSelectedIndex(settings.controlStyle);
 	for(int i=0; i<6; i++)
 	{
 		btnColour[i]->setBackColour(woopsiRGB(settings.colour[i][0], settings.colour[i][1], settings.colour[i][2]));
@@ -101,11 +98,8 @@ void SettingsScreen::revertSettings()
 	btnBackgroundColour->setBackColour(woopsiRGB(settings.bgColour[0], settings.bgColour[1], settings.bgColour[2]));
 }
 
-void SettingsScreen::updateSettings()
+void SettingsScreen::updateColours()
 {
-	settings.rotateSensitivity=sldRotateSensitivity->getValue()+10;
-	settings.twistSensitivity=sldTwistSensitivity->getValue()+10;
-	settings.controlStyle=rbgControlStyle->getSelectedIndex();
 	for(int i=0; i<6; i++)
 	{
 		u16 tmpColour = btnColour[i]->getBackColour();
@@ -117,6 +111,22 @@ void SettingsScreen::updateSettings()
 	settings.bgColour[0]=(tmpColour & (u8)31);
 	settings.bgColour[1]=((tmpColour >> 5) & (u8)31);
 	settings.bgColour[2]=((tmpColour >> 10) & (u8)31);
+}
+
+void SettingsScreen::revertSettings()
+{
+	sldRotateSensitivity->setValue(settings.rotateSensitivity-10);
+	sldTwistSensitivity->setValue(settings.twistSensitivity-10);
+	rbgControlStyle->setSelectedIndex(settings.controlStyle);
+	revertColours();
+}
+
+void SettingsScreen::updateSettings()
+{
+	settings.rotateSensitivity=sldRotateSensitivity->getValue()+10;
+	settings.twistSensitivity=sldTwistSensitivity->getValue()+10;
+	settings.controlStyle=rbgControlStyle->getSelectedIndex();
+	updateColours();
 }
 
 void SettingsScreen::drawContents(GraphicsPort* port) {
@@ -297,7 +307,6 @@ void SettingsScreen::buildCreditsPage()
 	label->setBorderless(true);
 	label->setFont(new Gulimche12);
 	_pages->addGadgetToPage(3, label);
-
 }
 
 
@@ -308,17 +317,28 @@ void SettingsScreen::buildPainterPage()
 	label->setFont(new Gulimche12);
 	_pages->addGadgetToPage(4, label);
 
+	int width = _pages->getPageWidth();
+	int offset = (width - 130)/2;
+
 	for(u8 i=0; i<6; i++)
 	{
-		btnColour[i] = new Button((i%3)*20+30, (i/3)*20+30, 20, 20, "");
+		btnColour[i] = new Button((i%3)*20+offset, (i/3)*20+30, 20, 20, "");
 		btnColour[i]->setBackColour(woopsiRGB(settings.colour[i][0], settings.colour[i][1], settings.colour[i][2]));
 		btnColour[i]->setRefcon((4*10)+i);
 		btnColour[i]->addGadgetEventHandler(this);
 		_pages->addGadgetToPage(4, btnColour[i]);
 	}
 
-	btnPaint = new Button(30, 70, 60, 30, "Paint");
-	btnPaint->setRefcon(46);
+	Button* button = new Button(width-60-offset, 30, 60, 20, "Reset");
+	button->setRefcon(46);
+	_pages->addGadgetToPage(4, button);
+
+	btnApplyColours = new Button(width-60-offset, 50, 60, 20, "Apply");
+	btnApplyColours->setRefcon(47);
+	_pages->addGadgetToPage(4, btnApplyColours);
+
+	btnPaint = new Button(width/2 - 30, 80, 60, 30, "Paint");
+	btnPaint->setRefcon(48);
 	_pages->addGadgetToPage(4, btnPaint);
 
 	/*btnColour[0] = new Button(0, 0, 20, 20, "");
@@ -368,7 +388,7 @@ void SettingsScreen::handleActionEvent(const GadgetEventArgs& e)
 {
 	int refcon=e.getSource()->getRefcon();
 	
-	if(refcon>=40 && refcon<50)
+	if(refcon>=40 && refcon<46)
 	{
 		ColourPicker* pick = new ColourPicker(27, 55, 200, 80, "Colour Picker", btnColour[refcon-40]->getBackColour(), GADGET_DRAGGABLE);
 		pick->setRefcon(refcon-40);
@@ -376,6 +396,11 @@ void SettingsScreen::handleActionEvent(const GadgetEventArgs& e)
 		addGadget(pick);
 		pick->goModal();
 		//pick->redraw();
+	}
+	if(refcon==46)
+	{
+		setDefaultColours();
+		revertColours();
 	}
 	if(refcon==51)
 	{

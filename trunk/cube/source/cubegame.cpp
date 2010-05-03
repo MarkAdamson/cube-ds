@@ -31,8 +31,13 @@
 #include "settingsscreen.h"
 #include "settingsbutton.h"
 #include "backbutton.h"
+#include "undo.h"
+#include "redo.h"
+#include "cancel.h"
+#include "ok.h"
 #include "image.h"
 #include "mebmp.h"
+#include "spritebutton.h"
 
 #include "sys/stat.h"
 #include "dirent.h"
@@ -114,10 +119,21 @@ void CubeGame::startup()
 	//setup sprites
 	oamInit(&oamMain, SpriteMapping_Bmp_1D_128, false); //initialize the oam
 	gfxSettings = oamAllocateGfx(&oamMain, SpriteSize_64x32,SpriteColorFormat_256Color);//make room for the sprite
+	//settingsButton = new SpriteButton(192, 0, 64, 32, gfxSettings, 0, "");
+	//screen->addGadget(settingsButton);
+	//settingsButton->hide();
 	dmaCopy(settingsbuttonTiles, gfxSettings, settingsbuttonTilesLen);//copy the sprite
 	dmaCopy(settingsbuttonPal, SPRITE_PALETTE, settingsbuttonPalLen); //copy the sprites palette
 	gfxBack = oamAllocateGfx(&oamMain, SpriteSize_64x32, SpriteColorFormat_256Color);
 	dmaCopy(backbuttonTiles, gfxBack, backbuttonTilesLen);
+	gfxUndo = oamAllocateGfx(&oamMain, SpriteSize_32x32, SpriteColorFormat_256Color);
+	dmaCopy(undoTiles, gfxUndo, undoTilesLen);
+	gfxRedo = oamAllocateGfx(&oamMain, SpriteSize_32x32, SpriteColorFormat_256Color);
+	dmaCopy(redoTiles, gfxRedo, redoTilesLen);
+	gfxCancel = oamAllocateGfx(&oamMain, SpriteSize_64x32, SpriteColorFormat_256Color);
+	dmaCopy(cancelTiles, gfxCancel, cancelTilesLen);
+	gfxOk = oamAllocateGfx(&oamMain, SpriteSize_64x32, SpriteColorFormat_256Color);
+	dmaCopy(okTiles, gfxOk, okTilesLen);
 	//dmaCopy(backbuttonPal, SPRITE_PALETTE, backbuttonPalLen);
 	oamEnable(&oamMain);
 
@@ -342,16 +358,19 @@ void CubeGame::_run()
 			touchRead(&oldXY);
 			
 			// If player touches the top-right poly, take them to settings
-			if((oldXY.px >=192) && (oldXY.py <=32))
+			if(!painting)
 			{
-				settings=!settings;
-				painting=false;
-				_switchScreens();
-				_drawShit();
-				return;
+				if((oldXY.px >=192) && (oldXY.py <=32))
+				{
+					settings=!settings;
+					painting=false;
+					_switchScreens();
+					_drawShit();
+					return;
+				}
 			}
 			// During Painting, register palette touches
-			if(painting)
+			else
 			{
 				if(oldXY.px>=6 && oldXY.px < 54 && oldXY.py >= 60 && oldXY.py < 132)
 				{
@@ -362,6 +381,19 @@ void CubeGame::_run()
 					paintColour=tmpXY.py / 24;
 					if(tmpXY.px >=24) paintColour += 3;
 					palTouch=true;
+				}
+
+				//if(oldXY.px>=10 && oldXY.px < 42 && oldXY.py >= 10 && oldXY.py < 42) //undo
+				//if(oldXY.px>=47 && oldXY.px < 79 && oldXY.py >= 10 && oldXY.py < 42) //redo
+				//if(oldXY.px 60 && oldXY.py >= 172) //cancel
+				if(oldXY.px>=196 && oldXY.py >= 172) //ok
+				{
+					settings=!settings;
+					painting=false;
+					_switchScreens();
+					_drawShit();
+					_hidePainterGUI();
+					return;
 				}
 			}
 		}
@@ -472,6 +504,22 @@ void CubeGame::_drawPalette()
 	//glDisable(GL_OUTLINE);
 }
 
+void CubeGame::_showPainterGUI()
+{
+	oamSet(&oamMain,2,5,5,0,0,SpriteSize_32x32,SpriteColorFormat_256Color,gfxUndo,0,false,false,false,false,false);
+	oamSet(&oamMain,3,42,5,0,0,SpriteSize_32x32,SpriteColorFormat_256Color,gfxRedo,0,false,false,false,false,false);
+	oamSet(&oamMain,4,0,160,0,0,SpriteSize_64x32,SpriteColorFormat_256Color,gfxCancel,0,false,false,false,false,false);
+	oamSet(&oamMain,5,192,160,0,0,SpriteSize_64x32,SpriteColorFormat_256Color,gfxOk,0,false,false,false,false,false);
+}
+
+void CubeGame::_hidePainterGUI()
+{
+	oamSet(&oamMain,2,10,10,0,0,SpriteSize_32x32,SpriteColorFormat_256Color,gfxUndo,0,false,true,false,false,false);
+	oamSet(&oamMain,3,47,10,0,0,SpriteSize_32x32,SpriteColorFormat_256Color,gfxRedo,0,false,true,false,false,false);
+	oamSet(&oamMain,4,0,160,0,0,SpriteSize_64x32,SpriteColorFormat_256Color,gfxCancel,0,false,true,false,false,false);
+	oamSet(&oamMain,5,192,160,0,0,SpriteSize_64x32,SpriteColorFormat_256Color,gfxOk,0,false,true,false,false,false);
+}
+
 //-----------------------------------------------------------------------------
 // Calculates and draws all the 3d stuff, as well as asking the cube to draw
 // itself as well.
@@ -491,15 +539,16 @@ void CubeGame::_drawShit()
 	if(!settings)
 	{
 		mainCube.Update(twisting, touchXY, touchVector, painting, paintColour);
-		oamSet(&oamMain,0,192,0,0,0,SpriteSize_64x32,SpriteColorFormat_256Color,gfxSettings,0,false,false,false,false,false);
-		oamSet(&oamMain,1,256,0,0,0,SpriteSize_64x32,SpriteColorFormat_256Color,gfxBack,0,false,false,false,false,false);
+		if(!painting) oamSet(&oamMain,0,192,0,0,0,SpriteSize_64x32,SpriteColorFormat_256Color,gfxSettings,0,false,false,false,false,false);
+		//settingsButton->show();
+		oamSet(&oamMain,1,192,0,0,0,SpriteSize_64x32,SpriteColorFormat_256Color,gfxBack,0,false,true,false,false,false);
 
 
 	}else{
 		if(!saving && !loading)
 		{
 			mainCube.Update(twisting, touchXY, touchVector, false, 0);
-			oamSet(&oamMain,1,256,0,0,0,SpriteSize_64x32,SpriteColorFormat_256Color,gfxBack,0,false,false,false,false,false);
+			oamSet(&oamMain,1,192,0,0,0,SpriteSize_64x32,SpriteColorFormat_256Color,gfxBack,0,false,true,false,false,false);
 		}else{
 			oamSet(&oamMain,1,192,0,0,0,SpriteSize_64x32,SpriteColorFormat_256Color,gfxBack,0,false,false,false,false,false);
 
@@ -573,7 +622,8 @@ void CubeGame::_drawShit()
 		}
 
 
-		oamSet(&oamMain,0,256,0,0,0,SpriteSize_64x32,SpriteColorFormat_256Color,gfxSettings,0,false,false,false,false,false);
+		oamSet(&oamMain,0,192,0,0,0,SpriteSize_64x32,SpriteColorFormat_256Color,gfxSettings,0,false,true,false,false,false);
+		//settingsButton->hide();
 	}
 
 	oamUpdate(&oamMain);
@@ -658,12 +708,15 @@ void CubeGame::handleActionEvent(const GadgetEventArgs& e)
 	case 13:
 		mainCube.Scramble();
 		break;
-	case 46:
+	case 48: //Paint
 		_settingsscreen->updateSettings();
 		_applySettings();
 		_saveSettings();
+
 		painting=true;
 		paintColour=0;
+		_showPainterGUI();
+
 		settings=!settings;
 		_switchScreens();
 		break;
