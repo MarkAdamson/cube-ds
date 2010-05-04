@@ -283,7 +283,7 @@ void SettingsScreen::buildBackgroundPage()
 
 	RadioButtonGroup* rbgBackgroundType = new RadioButtonGroup(10, 30);
 	rbgBackgroundType->newRadioButton(0, 0, 8, 8);
-	rbgBackgroundType->newRadioButton(0, 18, 8, 8);
+	rbgBackgroundType->newRadioButton(0, 19, 8, 8);
 	rbgBackgroundType->setSelectedIndex(0);
 	rbgBackgroundType->setRefcon(20);
 	rbgBackgroundType->addGadgetEventHandler(this);
@@ -293,7 +293,7 @@ void SettingsScreen::buildBackgroundPage()
 	label->setTextAlignmentHoriz(Label::TEXT_ALIGNMENT_HORIZ_LEFT);
 	label->setBorderless(true);
 	_pages->addGadgetToPage(2, label);
-	label = new Label(25, 48, 30, 14, "File:");
+	label = new Label(25, 49, 30, 14, "File:");
 	label->setTextAlignmentHoriz(Label::TEXT_ALIGNMENT_HORIZ_LEFT);
 	label->setBorderless(true);
 	_pages->addGadgetToPage(2, label);
@@ -304,12 +304,13 @@ void SettingsScreen::buildBackgroundPage()
 	btnBackgroundColour->addGadgetEventHandler(this);
 	_pages->addGadgetToPage(2, btnBackgroundColour);
 
-	tbxBackgroundImage = new TextBox(55, 44, 168, 15, "");
+	tbxBackgroundImage = new TextBox(55, 44, 168, 16, "");
 	tbxBackgroundImage->setTextAlignmentHoriz(TextBox::TEXT_ALIGNMENT_HORIZ_LEFT);
 	tbxBackgroundImage->disableKeyboardPopup();
 	_pages->addGadgetToPage(2, tbxBackgroundImage);
 
-	Button* button = new Button(225, 44, 20, 15, "...");
+	Button* button = new Button(225, 44, 20, 16, "...");
+	button->setTextAlignmentVert(Label::TEXT_ALIGNMENT_VERT_BOTTOM);
 	button->setRefcon(22);
 	button->addGadgetEventHandler(this);
 	_pages->addGadgetToPage(2, button);
@@ -413,14 +414,14 @@ void SettingsScreen::handleActionEvent(const GadgetEventArgs& e)
 		pick->goModal();
 	}
 	if(refcon==22)
-	{/*
+	{
 		FileRequester* req = new FileRequester(10, 10, 150, 150, "", "/", GADGET_DRAGGABLE | GADGET_DOUBLE_CLICKABLE);
-		req->setRefcon(refcon);
+		req->setRefcon(101);
 		req->addGadgetEventHandler(this);
 		addGadget(req);
 		req->goModal();
-		req->redraw();
-	*/}
+		//req->redraw();
+	}
 	if(refcon>=40 && refcon<46)
 	{
 		ColourPicker* pick = new ColourPicker(27, 55, 200, 80, "Colour Picker", btnColour[refcon-40]->getBackColour(), GADGET_DRAGGABLE);
@@ -445,6 +446,8 @@ void SettingsScreen::handleValueChangeEvent(const GadgetEventArgs& e)
 		int refcon=e.getSource()->getRefcon();
 		if(refcon<6)
 			btnColour[refcon]->setBackColour(((ColourPicker*)e.getSource())->getColour());
+		if(refcon==101)
+			tbxBackgroundImage->setText(((FileRequester*)e.getSource())->getSelectedOption()->getText());
 		if(refcon==51)
 			btnBackgroundColour->setBackColour(((ColourPicker*)e.getSource())->getColour());
 	}
