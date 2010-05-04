@@ -20,11 +20,9 @@
 #ifndef _SETTINGSSCREEN_H_
 #define _SETTINGSSCREEN_H_
 
-#include <nds.h>
 #include "gadget.h"
 #include "gadgetstyle.h"
 #include "gadgeteventhandler.h"
-#include "woopsistring.h"
 
 enum SS_Pages {SS_TITLE, SS_GAME, SS_CONTROL, SS_SOLVE, SS_BACKGROUND, SS_PAINTER};
 
@@ -44,7 +42,7 @@ namespace WoopsiUI {
 	class SliderHorizontal;
 	class RadioButtonGroup;
 	class TabScreen;
-	class ColourPicker;
+	class TextBox;
 
 	/**
 	 * Class providing a calendar/date picker.  Raises an EVENT_ACTION event
@@ -82,7 +80,7 @@ namespace WoopsiUI {
 		 * parent.
 		 * @param rect Reference to a rect to populate with data.
 		 */
-		virtual void getPreferredDimensions(Rect& rect) const;
+		void getPreferredDimensions(Rect& rect) const;
 
 		void revertColours();
 
@@ -106,6 +104,7 @@ namespace WoopsiUI {
 		Button* btnPaint;
 		Button* btnBackgroundColour;
 		Button* btnApplyColours;
+		TextBox* tbxBackgroundImage;
 		TabScreen* _pages;
 		WoopsiString strPage[6];
 		Settings settings;

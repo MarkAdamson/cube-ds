@@ -17,8 +17,8 @@
  * along with cube-ds.  If not, see <http://www.gnu.org/licenses/>.
  */
  
-#include <stdio.h>
-#include <stdlib.h>
+//#include <stdio.h>
+//#include <stdlib.h>
 
 #include "settingsscreen.h"
 #include "tabscreen.h"
@@ -26,15 +26,17 @@
 #include "mebmp.h"
 #include "colourpicker.h"
 
+#include "woopsiheaders.h"
+#include "woopsifuncs.h"
+
 #include "button.h"
 #include "label.h"
 #include "graphicsport.h"
-#include "calendardaybutton.h"
-#include "woopsistring.h"
 #include "sliderhorizontal.h"
 #include "radiobuttongroup.h"
+#include "textbox.h"
 #include "fonts/gulimche12.h"
-#include "woopsifuncs.h"
+#include "filerequester.h"
 
 using namespace WoopsiUI;
 
@@ -281,24 +283,37 @@ void SettingsScreen::buildBackgroundPage()
 
 	RadioButtonGroup* rbgBackgroundType = new RadioButtonGroup(10, 30);
 	rbgBackgroundType->newRadioButton(0, 0, 8, 8);
-	rbgBackgroundType->newRadioButton(0, 14, 8, 8);
+	rbgBackgroundType->newRadioButton(0, 18, 8, 8);
 	rbgBackgroundType->setSelectedIndex(0);
-	rbgBackgroundType->setRefcon(50);
+	rbgBackgroundType->setRefcon(20);
 	rbgBackgroundType->addGadgetEventHandler(this);
 	_pages->addGadgetToPage(2, rbgBackgroundType);
 
 	label = new Label(25, 30, 50, 14, "Colour:");
+	label->setTextAlignmentHoriz(Label::TEXT_ALIGNMENT_HORIZ_LEFT);
 	label->setBorderless(true);
 	_pages->addGadgetToPage(2, label);
-	label = new Label(25, 44, 50, 14, "File:");
+	label = new Label(25, 48, 30, 14, "File:");
+	label->setTextAlignmentHoriz(Label::TEXT_ALIGNMENT_HORIZ_LEFT);
 	label->setBorderless(true);
 	_pages->addGadgetToPage(2, label);
 
 	btnBackgroundColour = new Button(75, 27, 30, 14, "");
 	btnBackgroundColour->setBackColour(woopsiRGB(settings.bgColour[0], settings.bgColour[1], settings.bgColour[2]));
-	btnBackgroundColour->setRefcon(51);
+	btnBackgroundColour->setRefcon(21);
 	btnBackgroundColour->addGadgetEventHandler(this);
 	_pages->addGadgetToPage(2, btnBackgroundColour);
+
+	tbxBackgroundImage = new TextBox(55, 44, 168, 15, "");
+	tbxBackgroundImage->setTextAlignmentHoriz(TextBox::TEXT_ALIGNMENT_HORIZ_LEFT);
+	tbxBackgroundImage->disableKeyboardPopup();
+	_pages->addGadgetToPage(2, tbxBackgroundImage);
+
+	Button* button = new Button(225, 44, 20, 15, "...");
+	button->setRefcon(22);
+	button->addGadgetEventHandler(this);
+	_pages->addGadgetToPage(2, button);
+
 }
 
 void SettingsScreen::buildCreditsPage()
@@ -388,7 +403,24 @@ void SettingsScreen::getPreferredDimensions(Rect& rect) const {
 void SettingsScreen::handleActionEvent(const GadgetEventArgs& e)
 {
 	int refcon=e.getSource()->getRefcon();
-	
+
+	if(refcon==21)
+	{
+		ColourPicker* pick = new ColourPicker(27, 55, 200, 80, "Choose Background Colour", e.getSource()->getBackColour(), GADGET_DRAGGABLE);
+		pick->setRefcon(refcon);
+		pick->addGadgetEventHandler(this);
+		addGadget(pick);
+		pick->goModal();
+	}
+	if(refcon==22)
+	{/*
+		FileRequester* req = new FileRequester(10, 10, 150, 150, "", "/", GADGET_DRAGGABLE | GADGET_DOUBLE_CLICKABLE);
+		req->setRefcon(refcon);
+		req->addGadgetEventHandler(this);
+		addGadget(req);
+		req->goModal();
+		req->redraw();
+	*/}
 	if(refcon>=40 && refcon<46)
 	{
 		ColourPicker* pick = new ColourPicker(27, 55, 200, 80, "Colour Picker", btnColour[refcon-40]->getBackColour(), GADGET_DRAGGABLE);
@@ -396,7 +428,6 @@ void SettingsScreen::handleActionEvent(const GadgetEventArgs& e)
 		pick->addGadgetEventHandler(this);
 		addGadget(pick);
 		pick->goModal();
-		//pick->redraw();
 	}
 	if(refcon==46)
 	{
@@ -404,14 +435,6 @@ void SettingsScreen::handleActionEvent(const GadgetEventArgs& e)
 		for(int i=0; i<6; i++)
 			btnColour[i]->setBackColour(woopsiRGB(settings.colour[i][0], settings.colour[i][1], settings.colour[i][2]));
 		redraw();
-	}
-	if(refcon==51)
-	{
-		ColourPicker* pick = new ColourPicker(27, 55, 200, 80, "Choose Background Colour", e.getSource()->getBackColour(), GADGET_DRAGGABLE);
-		pick->setRefcon(refcon);
-		pick->addGadgetEventHandler(this);
-		addGadget(pick);
-		pick->goModal();
 	}
 }
 
