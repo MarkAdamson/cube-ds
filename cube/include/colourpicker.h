@@ -17,8 +17,8 @@
  * along with cube-ds.  If not, see <http://www.gnu.org/licenses/>.
  */
  
-#ifndef _FILE_REQUESTER_H_
-#define _FILE_REQUESTER_H_
+#ifndef _COLOUR_PICKER_H_
+#define _COLOUR_PICKER_H_
 
 #include "amigawindow.h"
 #include "gadgetstyle.h"
