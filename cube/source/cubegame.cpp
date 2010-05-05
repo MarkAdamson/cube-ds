@@ -42,9 +42,14 @@
 #include "fat.h"
 #include "math.h"
 
+RubiksCube mainCube;
+
 int SLRotation;
 int paintColour;
 RubikSide oldLayout[6];
+
+RubiksCube SLCube;
+RubikSide SLLayout[3][6];
 
 void CubeGame::_initWoopsi()
 {
@@ -175,17 +180,11 @@ void CubeGame::startup()
 	touchVector.Z=0;
 
 	//Reset all cubes
-	RubikSide tmpLayout[6];
 	mainCube.Reset();
-	mainCube.getLayout(tmpLayout);
+	SLCube.Reset();
 	for(int i=0; i<3; i++)
 	{
-		cube[i].setLayout(tmpLayout);
-
-		if(i%2)
-			cube[i].Resize(0.9);
-		else
-			cube[i].Resize(1);
+		mainCube.getLayout(SLLayout[i]);
 	}
 
 	_loadSettings();
@@ -265,7 +264,9 @@ void CubeGame::_loadSettings()
 	for(int i=0; i<3; i++)
 	{
 		fread((void*)&tmpLayout, sizeof(tmpLayout), 1, settingsfile);
-		cube[i].setLayout(tmpLayout);
+		//cube[i].setLayout(tmpLayout);
+		for(int j=0; j<6; j++)
+			SLLayout[i][j]=tmpLayout[j];
 	}
 
 	fclose(settingsfile);
@@ -284,7 +285,9 @@ void CubeGame::_saveSettings()
 	fwrite((void*)&_settingsscreen->settings, sizeof(_settingsscreen->settings), 1, settingsfile);
 	for(int i=0; i<3; i++)
 	{
-		cube[i].getLayout(tmpLayout);
+		//cube[i].getLayout(tmpLayout);
+		for(int j=0; j<6; j++)
+			tmpLayout[j]=SLLayout[i][j];
 		fwrite((void*)&tmpLayout, sizeof(tmpLayout), 1, settingsfile);
 	}
 	fclose(settingsfile);
@@ -292,9 +295,9 @@ void CubeGame::_saveSettings()
 
 void CubeGame::_loadCube(int cuben)
 {
-	RubikSide tmpLayout[6];
-	cube[cuben].getLayout(tmpLayout);
-	mainCube.setLayout(tmpLayout);
+	//RubikSide tmpLayout[6];
+	//cube[cuben].getLayout(tmpLayout);
+	mainCube.setLayout(SLLayout[cuben]);
 	loading=false;
 }
 
@@ -303,8 +306,8 @@ void CubeGame::_saveCube(int cuben)
 	Settings tmpSettings;
 	RubikSide tmpLayout[6];
 
-	mainCube.getLayout(tmpLayout);
-	cube[cuben].setLayout(tmpLayout);
+	mainCube.getLayout(SLLayout[cuben]);
+	//cube[cuben].setLayout(tmpLayout);
 
 	FILE* savefile;
 
@@ -316,7 +319,9 @@ void CubeGame::_saveCube(int cuben)
 	fwrite((void*)&tmpSettings, sizeof(tmpSettings), 1, savefile);
 	for(int i=0; i<3; i++)
 	{
-		cube[i].getLayout(tmpLayout);
+		//cube[i].getLayout(tmpLayout);
+		for(int j=0; j<6; j++)
+			tmpLayout[j]=SLLayout[i][j];
 		fwrite((void*)&tmpLayout, sizeof(tmpLayout), 1, savefile);
 	}
 	fclose(savefile);
@@ -565,8 +570,9 @@ void CubeGame::_drawShit()
 
 			glTranslate3f32(inttof32(-2), 0, 0);
 			glRotateYi(SLRotation);
-			//cube[0].Resize(0.9);
-			cube[0].Update(twisting, touchXY, touchVector, false, 0);
+			SLCube.Resize(0.9);
+			SLCube.setLayout(SLLayout[0]);
+			SLCube.Update(twisting, touchXY, touchVector, false, 0);
 
 			glLoadIdentity();
 			gluLookAt(	0.0, 0.0, 3.5,		//camera position
@@ -574,8 +580,9 @@ void CubeGame::_drawShit()
 						0.0, 1.0, 0.0);		//up
 
 			glRotateYi(SLRotation);
-			//cube[1].Resize(1);
-			cube[1].Update(twisting, touchXY, touchVector, false, 0);
+			SLCube.Resize(1);
+			SLCube.setLayout(SLLayout[1]);
+			SLCube.Update(twisting, touchXY, touchVector, false, 0);
 
 			glLoadIdentity();
 			gluLookAt(	0.0, 0.0, 3.5,		//camera position
@@ -584,8 +591,9 @@ void CubeGame::_drawShit()
 
 			glTranslate3f32(inttof32(2), 0, 0);
 			glRotateYi(SLRotation);
-			//cube[2].Resize(0.9);
-			cube[2].Update(twisting, touchXY, touchVector, false, 0);
+			SLCube.Resize(0.9);
+			SLCube.setLayout(SLLayout[2]);
+			SLCube.Update(twisting, touchXY, touchVector, false, 0);
 
 			if(keysDown() & KEY_TOUCH)
 			{
@@ -638,8 +646,9 @@ void CubeGame::_applySettings()
 	for(int i=0; i<6; i++)
 	{
 		mainCube.setColour(i, (_settingsscreen->settings.colour[i][0]+1)*8-1, (_settingsscreen->settings.colour[i][1]+1)*8-1, (_settingsscreen->settings.colour[i][2]+1)*8-1);
-		for(int j=0; j<3; j++)
-			cube[j].setColour(i, (_settingsscreen->settings.colour[i][0]+1)*8-1, (_settingsscreen->settings.colour[i][1]+1)*8-1, (_settingsscreen->settings.colour[i][2]+1)*8-1);
+		SLCube.setColour(i, (_settingsscreen->settings.colour[i][0]+1)*8-1, (_settingsscreen->settings.colour[i][1]+1)*8-1, (_settingsscreen->settings.colour[i][2]+1)*8-1);
+		//for(int j=0; j<3; j++)
+			//cube[j].setColour(i, (_settingsscreen->settings.colour[i][0]+1)*8-1, (_settingsscreen->settings.colour[i][1]+1)*8-1, (_settingsscreen->settings.colour[i][2]+1)*8-1);
 	}
 	glClearColor(_settingsscreen->settings.bgColour[0], _settingsscreen->settings.bgColour[1], _settingsscreen->settings.bgColour[2], 31);
 }
