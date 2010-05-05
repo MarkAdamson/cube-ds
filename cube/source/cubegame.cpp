@@ -46,13 +46,8 @@ int SLRotation;
 int paintColour;
 RubikSide oldLayout[6];
 
-void CubeGame::startup()
+void CubeGame::_initWoopsi()
 {
-	//consoleDemoInit();
-	//mainCube.Resize(2.5);
-
-	//put 3D on touchscreen
-	lcdMainOnTop();
 	
 	// Create screen
 	Screen* screen = new Screen("Windowless Screen", Gadget::GADGET_DRAGGABLE);
@@ -87,57 +82,36 @@ void CubeGame::startup()
 	
 	// Draw GUI
 	redraw();
-
-	// Disable while on top screen
-	//woopsiApplication->disable();
-
-	// Initialise states
-	moving=false;
-	twisting=false;
-	settings=true;
-	loading=false;
-	saving=false;
-	switching=false;
-	painting=false;
-	SLRotation=0;
+}
+void CubeGame::_initSprites()
+{
 	
-	//setup the sub screen for basic printing
-	//consoleDemoInit();
-	//printf("%s\n", arg);
-
-	fatInitDefault();
-
-	// Setup the Main screen for 3D
-	//videoSetMode(MODE_0_3D);
-
-
-	videoSetMode(MODE_5_3D | DISPLAY_BG0_ACTIVE | DISPLAY_SPR_ACTIVE | DISPLAY_SPR_1D_LAYOUT);
-	//vramSetMainBanks(VRAM_A_MAIN_SPRITE,VRAM_B_LCD,VRAM_C_LCD,VRAM_D_LCD);
-	vramSetBankA(VRAM_A_MAIN_SPRITE);
-	//vramSetBankB(VRAM_B_LCD);
-	bgSetPriority(0, 1);
 	//setup sprites
 	oamInit(&oamMain, SpriteMapping_Bmp_1D_128, false); //initialize the oam
+
 	gfxSettings = oamAllocateGfx(&oamMain, SpriteSize_64x32,SpriteColorFormat_256Color);//make room for the sprite
-	//settingsButton = new SpriteButton(192, 0, 64, 32, gfxSettings, 0, "");
-	//screen->addGadget(settingsButton);
-	//settingsButton->hide();
 	dmaCopy(settingsbuttonTiles, gfxSettings, settingsbuttonTilesLen);//copy the sprite
 	dmaCopy(settingsbuttonPal, SPRITE_PALETTE, settingsbuttonPalLen); //copy the sprites palette
+
 	gfxBack = oamAllocateGfx(&oamMain, SpriteSize_64x32, SpriteColorFormat_256Color);
 	dmaCopy(backbuttonTiles, gfxBack, backbuttonTilesLen);
+
 	gfxUndo = oamAllocateGfx(&oamMain, SpriteSize_32x32, SpriteColorFormat_256Color);
 	dmaCopy(undoTiles, gfxUndo, undoTilesLen);
+
 	gfxRedo = oamAllocateGfx(&oamMain, SpriteSize_32x32, SpriteColorFormat_256Color);
 	dmaCopy(redoTiles, gfxRedo, redoTilesLen);
+
 	gfxCancel = oamAllocateGfx(&oamMain, SpriteSize_64x32, SpriteColorFormat_256Color);
 	dmaCopy(cancelTiles, gfxCancel, cancelTilesLen);
+
 	gfxOk = oamAllocateGfx(&oamMain, SpriteSize_64x32, SpriteColorFormat_256Color);
 	dmaCopy(okTiles, gfxOk, okTilesLen);
-	//dmaCopy(backbuttonPal, SPRITE_PALETTE, backbuttonPalLen);
+
 	oamEnable(&oamMain);
-
-
+}
+void CubeGame::_initGL()
+{
 	// initialize gl
 	glInit();
 
@@ -152,14 +126,6 @@ void CubeGame::startup()
 	glClearPolyID(63); // the BG and polygons will have the same ID unless a polygon is highlighted
 	glClearDepth(0x7FFF);
 
-	// Initialise variables
-	dx=0; dy=0;
-	oldXY.px = 45;
-	oldXY.py = 45;
-	touchVector.X=0;
-	touchVector.Y=0;
-	touchVector.Z=0;
-
 	// Set our view port to be the same size as the screen
 	glViewport(0,0,255,191);
 
@@ -171,12 +137,58 @@ void CubeGame::startup()
 	// Set the current matrix to be the model matrix
 	glMatrixMode(GL_MODELVIEW);
 	glPolyFmt(POLY_ALPHA(31) | POLY_CULL_FRONT | POLY_ID(0));
+}
 
+void CubeGame::startup()
+{
+	videoSetMode(MODE_5_3D | DISPLAY_BG0_ACTIVE | DISPLAY_SPR_ACTIVE | DISPLAY_SPR_1D_LAYOUT);
+	vramSetBankA(VRAM_A_MAIN_SPRITE);
+	bgSetPriority(0, 1);
+
+	//consoleDemoInit();
+	lcdMainOnTop();
+	fatInitDefault();
+
+
+	_initWoopsi();
+
+	_initSprites();
+
+	_initGL();
+
+	// Initialise states
+	moving=false;
+	twisting=false;
+	settings=true;
+	loading=false;
+	saving=false;
+	switching=false;
+	painting=false;
+	SLRotation=0;
+
+	// Initialise variables
+	dx=0; dy=0;
+	oldXY.px = 45;
+	oldXY.py = 45;
+	touchVector.X=0;
+	touchVector.Y=0;
+	touchVector.Z=0;
+
+	//Reset all cubes
+	RubikSide tmpLayout[6];
+	mainCube.Reset();
+	mainCube.getLayout(tmpLayout);
 	for(int i=0; i<3; i++)
-		cube[i].Reset();
+	{
+		cube[i].setLayout(tmpLayout);
+
+		if(i%2)
+			cube[i].Resize(0.9);
+		else
+			cube[i].Resize(1);
+	}
+
 	_loadSettings();
-
-
 }
 
 void CubeGame::_buildTitleScreen()
@@ -241,7 +253,6 @@ void CubeGame::_loadSettings()
 
 	FILE* settingsfile = fopen("/DATA/cube.dat", "rb");
 	RubikSide tmpLayout[6];
-	//Colour tmpPalette[6];
 
 	if(settingsfile==NULL)
 	{
@@ -255,9 +266,6 @@ void CubeGame::_loadSettings()
 	{
 		fread((void*)&tmpLayout, sizeof(tmpLayout), 1, settingsfile);
 		cube[i].setLayout(tmpLayout);
-
-		//fread((void*)&tmpPalette, sizeof(tmpPalette), 1, settingsfile);
-		//cube[i].setPalette(tmpPalette);
 	}
 
 	fclose(settingsfile);
@@ -270,7 +278,6 @@ void CubeGame::_loadSettings()
 void CubeGame::_saveSettings()
 {
 	RubikSide tmpLayout[6];
-	//Colour tmpPalette[6];
 
 	FILE* settingsfile=fopen("/DATA/cube.dat", "wb");
 
@@ -279,9 +286,6 @@ void CubeGame::_saveSettings()
 	{
 		cube[i].getLayout(tmpLayout);
 		fwrite((void*)&tmpLayout, sizeof(tmpLayout), 1, settingsfile);
-
-		//cube[i].getPalette(tmpPalette);
-		//fwrite((void*)&tmpPalette, sizeof(tmpPalette), 1, settingsfile);
 	}
 	fclose(settingsfile);
 }
@@ -289,22 +293,19 @@ void CubeGame::_saveSettings()
 void CubeGame::_loadCube(int cuben)
 {
 	RubikSide tmpLayout[6];
-	Colour tmpPalette[6];
 	cube[cuben].getLayout(tmpLayout);
-	cube[cuben].getPalette(tmpPalette);
 	mainCube.setLayout(tmpLayout);
-	mainCube.setPalette(tmpPalette);
 	loading=false;
 }
 
 void CubeGame::_saveCube(int cuben)
 {
-	cube[cuben]=mainCube;
-	//cube[cuben-1].Move(45, 45);
-
 	Settings tmpSettings;
 	RubikSide tmpLayout[6];
-	//Colour tmpPalette[6];
+
+	mainCube.getLayout(tmpLayout);
+	cube[cuben].setLayout(tmpLayout);
+
 	FILE* savefile;
 
 	savefile = fopen("/DATA/cube.dat", "rb");
@@ -317,9 +318,6 @@ void CubeGame::_saveCube(int cuben)
 	{
 		cube[i].getLayout(tmpLayout);
 		fwrite((void*)&tmpLayout, sizeof(tmpLayout), 1, savefile);
-
-		//cube[i].getPalette(tmpPalette);
-		//fwrite((void*)&tmpPalette, sizeof(tmpPalette), 1, savefile);
 	}
 	fclose(savefile);
 
@@ -353,8 +351,7 @@ void CubeGame::_run()
 			{
 				if((oldXY.px >=192) && (oldXY.py <=32))
 				{
-					settings=!settings;
-					painting=false;
+					settings=true;
 					_switchScreens();
 					_drawShit();
 					return;
@@ -386,7 +383,7 @@ void CubeGame::_run()
 				}
 				if(oldXY.px < 60 && oldXY.py >= 172) //cancel
 				{
-					settings=!settings;
+					settings=true;
 					painting=false;
 					mainCube.setLayout(oldLayout);
 					_switchScreens();
@@ -396,7 +393,7 @@ void CubeGame::_run()
 				}
 				if(oldXY.px>=196 && oldXY.py >= 172) //ok
 				{
-					settings=!settings;
+					settings=true;
 					painting=false;
 					_switchScreens();
 					_drawShit();
@@ -568,8 +565,7 @@ void CubeGame::_drawShit()
 
 			glTranslate3f32(inttof32(-2), 0, 0);
 			glRotateYi(SLRotation);
-			cube[0].Resize(0.9);
-			//cube[0].Move(-1,0);
+			//cube[0].Resize(0.9);
 			cube[0].Update(twisting, touchXY, touchVector, false, 0);
 
 			glLoadIdentity();
@@ -578,8 +574,7 @@ void CubeGame::_drawShit()
 						0.0, 1.0, 0.0);		//up
 
 			glRotateYi(SLRotation);
-			cube[1].Resize(1);
-			//cube[1].Move(-1,0);
+			//cube[1].Resize(1);
 			cube[1].Update(twisting, touchXY, touchVector, false, 0);
 
 			glLoadIdentity();
@@ -589,8 +584,7 @@ void CubeGame::_drawShit()
 
 			glTranslate3f32(inttof32(2), 0, 0);
 			glRotateYi(SLRotation);
-			cube[2].Resize(0.9);
-			//cube[2].Move(-1,0);
+			//cube[2].Resize(0.9);
 			cube[2].Update(twisting, touchXY, touchVector, false, 0);
 
 			if(keysDown() & KEY_TOUCH)
@@ -609,8 +603,6 @@ void CubeGame::_drawShit()
 				}
 
 				int cubetmp=0;
-				float disttmp;
-				disttmp=sqrt((45-tmpXY.px)*(45-tmpXY.px)+(96-tmpXY.py)*(96-tmpXY.py));
 				if(sqrt((45-tmpXY.px)*(45-tmpXY.px)+(96-tmpXY.py)*(96-tmpXY.py))<35)
 					cubetmp=1;
 				else if(sqrt((128-tmpXY.px)*(128-tmpXY.px)+(96-tmpXY.py)*(96-tmpXY.py))<35)
@@ -621,9 +613,7 @@ void CubeGame::_drawShit()
 				if(cubetmp)
 				{
 					if(saving)
-					{
 						_saveCube(cubetmp-1);
-					}
 					else
 						_loadCube(cubetmp-1);
 					_switchScreens();

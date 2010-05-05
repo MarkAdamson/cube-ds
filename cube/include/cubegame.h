@@ -62,6 +62,9 @@ private:
 	void processOneVBL(Gadget*);
 	
 	// Main functions:
+	void _initWoopsi();
+	void _initSprites();
+	void _initGL();
 	void _test();
 	void _switchScreens();
 	void _drawPalette();
