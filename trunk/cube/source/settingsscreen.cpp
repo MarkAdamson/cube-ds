@@ -408,7 +408,7 @@ void SettingsScreen::handleActionEvent(const GadgetEventArgs& e)
 	if(refcon==21)
 	{
 		ColourPicker* pick = new ColourPicker(27, 55, 200, 80, "Choose Background Colour", e.getSource()->getBackColour(), GADGET_DRAGGABLE);
-		pick->setRefcon(refcon);
+		pick->setRefcon(100);
 		pick->addGadgetEventHandler(this);
 		addGadget(pick);
 		pick->goModal();
@@ -446,9 +446,9 @@ void SettingsScreen::handleValueChangeEvent(const GadgetEventArgs& e)
 		int refcon=e.getSource()->getRefcon();
 		if(refcon<6)
 			btnColour[refcon]->setBackColour(((ColourPicker*)e.getSource())->getColour());
+		if(refcon==100)
+			btnBackgroundColour->setBackColour(((ColourPicker*)e.getSource())->getColour());
 		if(refcon==101)
 			tbxBackgroundImage->setText(((FileRequester*)e.getSource())->getSelectedOption()->getText());
-		if(refcon==51)
-			btnBackgroundColour->setBackColour(((ColourPicker*)e.getSource())->getColour());
 	}
 }
