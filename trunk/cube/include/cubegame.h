@@ -48,10 +48,6 @@ private:
 	VECTOR touchVector;
 	SettingsScreen* _settingsscreen;
 	
-	// The cube itself
-	RubiksCube mainCube;
-	RubiksCube cube[3];
-	
 	// The woopsi screen to draw to
 	//SettingsScreen* _settingsscreen;
 	// Woopsi buttons

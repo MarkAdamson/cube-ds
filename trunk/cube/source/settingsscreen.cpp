@@ -418,6 +418,7 @@ void SettingsScreen::handleActionEvent(const GadgetEventArgs& e)
 		FileRequester* req = new FileRequester(10, 10, 150, 150, "", "/", GADGET_DRAGGABLE | GADGET_DOUBLE_CLICKABLE);
 		req->setRefcon(101);
 		req->addGadgetEventHandler(this);
+		req->hideDepthButton();
 		addGadget(req);
 		req->goModal();
 		//req->redraw();
@@ -449,6 +450,6 @@ void SettingsScreen::handleValueChangeEvent(const GadgetEventArgs& e)
 		if(refcon==100)
 			btnBackgroundColour->setBackColour(((ColourPicker*)e.getSource())->getColour());
 		if(refcon==101)
-			tbxBackgroundImage->setText(((FileRequester*)e.getSource())->getSelectedOption()->getText());
+			tbxBackgroundImage->setText(((FileRequester*)e.getSource())->getFullName());
 	}
 }
