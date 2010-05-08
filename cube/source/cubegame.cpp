@@ -55,22 +55,28 @@ RubikSide SLLayout[3][6];
 
 #define PNG_BYTES_TO_CHECK 4
 
-bool check_if_png(char *file_name)
+char* check_if_png(char *file_name)
 {
-	char buf[PNG_BYTES_TO_CHECK];
+	png_byte buf[PNG_BYTES_TO_CHECK];
 	FILE* fp;
 
 	/* Open the prospective PNG file. */
-	if ((fp = fopen(file_name, "rb")) != NULL);
-		return 0;
+	if ((fp = fopen(file_name, "rb")) == NULL)
+		return (char*)"didn't open";
 
 	/* Read in the signature bytes */
-	if (fread(&buf, PNG_BYTES_TO_CHECK, 1, fp) != PNG_BYTES_TO_CHECK)
-		return 0;
+	//if (fread(&buf, PNG_BYTES_TO_CHECK, 1, fp) != PNG_BYTES_TO_CHECK)
+	//	return 0;
+	fread(&buf, PNG_BYTES_TO_CHECK, 1, fp);
+	
+	fclose(fp);
 
 	/* Compare the first PNG_BYTES_TO_CHECK bytes of the signature. */
-	return(!png_sig_cmp((png_byte*)buf, 0, PNG_BYTES_TO_CHECK));
-	fclose(fp);
+	int isPng = png_sig_cmp(buf, 0, PNG_BYTES_TO_CHECK);
+	if(isPng==0)
+		return (char*)"yay!";
+	else
+		return (char*)"nay :(";
 }
 
 void CubeGame::_initWoopsi()
@@ -806,10 +812,8 @@ void CubeGame::handleValueChangeEvent(const GadgetEventArgs& e)
 	{
 		char filename[_settingsscreen->tbxBackgroundImage->getText().getLength()];
 		_settingsscreen->tbxBackgroundImage->getText().copyToCharArray(filename);
-		if(check_if_png(filename))
-			_settingsscreen->tbxImageCheck->setText("YAY XD");
-		else
-			_settingsscreen->tbxImageCheck->setText("nay :(");
+		char* pngCheck = check_if_png(filename);
+		_settingsscreen->tbxImageCheck->setText(pngCheck);
 	}
 }
 
