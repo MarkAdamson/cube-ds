@@ -17,12 +17,14 @@
  * along with cube-ds.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <png.h>
 #include "cubegame.h"
 
 #include "screen.h"
 #include "amigawindow.h"
 #include "button.h"
 #include "scrollingpanel.h"
+#include "textbox.h"
 #include "fonts/gulimche12.h"
 #include "gadgeteventhandler.h"
 #include "woopsifuncs.h"
@@ -51,6 +53,26 @@ RubikSide oldLayout[6];
 RubiksCube SLCube;
 RubikSide SLLayout[3][6];
 
+#define PNG_BYTES_TO_CHECK 4
+
+bool check_if_png(char *file_name)
+{
+	char buf[PNG_BYTES_TO_CHECK];
+	FILE* fp;
+
+	/* Open the prospective PNG file. */
+	if ((fp = fopen(file_name, "rb")) != NULL);
+		return 0;
+
+	/* Read in the signature bytes */
+	if (fread(&buf, PNG_BYTES_TO_CHECK, 1, fp) != PNG_BYTES_TO_CHECK)
+		return 0;
+
+	/* Compare the first PNG_BYTES_TO_CHECK bytes of the signature. */
+	return(!png_sig_cmp((png_byte*)buf, 0, PNG_BYTES_TO_CHECK));
+	fclose(fp);
+}
+
 void CubeGame::_initWoopsi()
 {
 	
@@ -75,6 +97,7 @@ void CubeGame::_initWoopsi()
 	_settingsscreen->btnCredits->addGadgetEventHandler(this);
 	_settingsscreen->btnPaint->addGadgetEventHandler(this);
 	_settingsscreen->btnApplyColours->addGadgetEventHandler(this);
+	_settingsscreen->tbxBackgroundImage->addGadgetEventHandler(this);
 
 	_buildTitleScreen();
 	//titleScreen->goModal();
@@ -775,6 +798,19 @@ void CubeGame::handleActionEvent(const GadgetEventArgs& e)
 	}
 	//_switchScreens();
 	printf("Something\n");
+}
+
+void CubeGame::handleValueChangeEvent(const GadgetEventArgs& e)
+{
+	if(e.getSource()==(Gadget*)_settingsscreen->tbxBackgroundImage)
+	{
+		char filename[_settingsscreen->tbxBackgroundImage->getText().getLength()];
+		_settingsscreen->tbxBackgroundImage->getText().copyToCharArray(filename);
+		if(check_if_png(filename))
+			_settingsscreen->tbxImageCheck->setText("YAY XD");
+		else
+			_settingsscreen->tbxImageCheck->setText("nay :(");
+	}
 }
 
 

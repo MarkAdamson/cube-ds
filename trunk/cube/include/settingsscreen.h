@@ -105,6 +105,7 @@ namespace WoopsiUI {
 		Button* btnBackgroundColour;
 		Button* btnApplyColours;
 		TextBox* tbxBackgroundImage;
+		TextBox* tbxImageCheck;
 		TabScreen* _pages;
 		WoopsiString strPage[6];
 		Settings settings;
