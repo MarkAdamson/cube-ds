@@ -55,14 +55,14 @@ RubikSide SLLayout[3][6];
 
 #define PNG_BYTES_TO_CHECK 4
 
-char* check_if_png(char *file_name)
+bool check_if_png(char *file_name)
 {
 	png_byte buf[PNG_BYTES_TO_CHECK];
 	FILE* fp;
 
 	/* Open the prospective PNG file. */
 	if ((fp = fopen(file_name, "rb")) == NULL)
-		return (char*)"didn't open";
+		return false;
 
 	/* Read in the signature bytes */
 	//if (fread(&buf, PNG_BYTES_TO_CHECK, 1, fp) != PNG_BYTES_TO_CHECK)
@@ -73,10 +73,7 @@ char* check_if_png(char *file_name)
 
 	/* Compare the first PNG_BYTES_TO_CHECK bytes of the signature. */
 	int isPng = png_sig_cmp(buf, 0, PNG_BYTES_TO_CHECK);
-	if(isPng==0)
-		return (char*)"yay!";
-	else
-		return (char*)"nay :(";
+	return (isPng==0);
 }
 
 void CubeGame::_initWoopsi()
@@ -812,8 +809,10 @@ void CubeGame::handleValueChangeEvent(const GadgetEventArgs& e)
 	{
 		char filename[_settingsscreen->tbxBackgroundImage->getText().getLength()];
 		_settingsscreen->tbxBackgroundImage->getText().copyToCharArray(filename);
-		char* pngCheck = check_if_png(filename);
-		_settingsscreen->tbxImageCheck->setText(pngCheck);
+		if(check_if_png(filename))
+			_settingsscreen->tbxImageCheck->setText("yay!");
+		else
+			_settingsscreen->tbxImageCheck->setText("nay :(");
 	}
 }
 
