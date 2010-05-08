@@ -315,6 +315,11 @@ void SettingsScreen::buildBackgroundPage()
 	button->addGadgetEventHandler(this);
 	_pages->addGadgetToPage(2, button);
 
+	tbxImageCheck = new TextBox(55, 62, 168, 16, "");
+	tbxImageCheck->setTextAlignmentHoriz(TextBox::TEXT_ALIGNMENT_HORIZ_LEFT);
+	tbxImageCheck->disableKeyboardPopup();
+	_pages->addGadgetToPage(2, tbxImageCheck);
+
 }
 
 void SettingsScreen::buildCreditsPage()
