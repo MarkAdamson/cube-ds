@@ -17,6 +17,7 @@
  * along with cube-ds.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "png.h"
 #include "woopsi.h"
 #include "rubikscube.h"
 #include "button.h"
@@ -74,6 +75,8 @@ private:
 	void _loadCube(int cuben);
 	void _saveCube(int cuben);
 	void _buildTitleScreen();
+	bool _loadPNG(char* filename);
+	void _pngEndOfRowCallback(png_ptr ptr, png_uint_32 row, int pass);
 	
 	// Gadget handler for Woopsi button presses
 	void handleActionEvent(const WoopsiUI::GadgetEventArgs&);
