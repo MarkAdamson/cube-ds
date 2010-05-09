@@ -52,23 +52,16 @@ RubikSide oldLayout[6];
 RubiksCube SLCube;
 RubikSide SLLayout[3][6];
 
-#define PNG_BYTES_TO_CHECK 4
+#define PNG_BYTES_TO_CHECK 8
 
-bool check_if_png(char *file_name)
+bool check_if_png(FILE* fp)
 {
 	png_byte buf[PNG_BYTES_TO_CHECK];
-	FILE* fp;
-
-	/* Open the prospective PNG file. */
-	if ((fp = fopen(file_name, "rb")) == NULL)
-		return false;
 
 	/* Read in the signature bytes */
 	//if (fread(&buf, PNG_BYTES_TO_CHECK, 1, fp) != PNG_BYTES_TO_CHECK)
 	//	return 0;
 	fread(&buf, PNG_BYTES_TO_CHECK, 1, fp);
-	
-	fclose(fp);
 
 	/* Compare the first PNG_BYTES_TO_CHECK bytes of the signature. */
 	int isPng = png_sig_cmp(buf, 0, PNG_BYTES_TO_CHECK);
@@ -704,10 +697,12 @@ bool CubeGame::_loadPNG(char* filename)
 {
 	FILE* fp;
 
-	if(check_if_png(filename))
-	{
-		fp = fopen(filename, "rb");
+	/* Open the prospective PNG file. */
+	if ((fp = fopen(filename, "rb")) == NULL)
+		return false;
 
+	if(check_if_png(fp))
+	{
 		png_structp png_ptr = png_create_read_struct
 		(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
 		if (!png_ptr)
@@ -733,17 +728,54 @@ bool CubeGame::_loadPNG(char* filename)
 			fclose(fp);
 			return false;
 		}
+		
+		png_init_io(png_ptr, fp);
+		
+		png_set_sig_bytes(png_ptr, PNG_BYTES_TO_CHECK);
+		
+		png_read_info(png_ptr, info_ptr);
+		
+		uint32 width = png_get_image_width(png_ptr, info_ptr);
+		uint32 height = png_get_image_height(png_ptr, info_ptr);
+		uint32 colourType = png_get_color_type(png_ptr, info_ptr);
+		uint32 channels = png_get_channels(png_ptr, info_ptr);
+		uint32 bitDepth = png_get_bit_depth(png_ptr, info_ptr);
+		
+		switch (colourType)
+		{
+			case PNG_COLOR_TYPE_PALETTE:
+				png_set_palette_to_rgb(png_ptr);
+				//Don't forget to update the channel info (thanks Tom!)
+				//It's used later to know how big a buffer we need for the image
+				channels = 3;
+				break;
+			case PNG_COLOR_TYPE_GRAY:
+				if (bitDepth < 8)
+				png_set_expand_gray_1_2_4_to_8(png_ptr);
+				//And the bitdepth info
+				bitDepth = 8;
+				break;
+		}
 
-		png_set_read_status_fn(png_ptr, _pngEndOfRowCallback);
+		/*if the image has a transperancy set.. convert it to a full Alpha channel..*/
+		if (png_get_valid(png_ptr, info_ptr, PNG_INFO_tRNS))
+		{
+			png_set_tRNS_to_alpha(png_ptr);
+			channels+=1;
+		}
+
+		//We don't support 16 bit precision.. so if the image Has 16 bits per channel
+        //precision... round it down to 8.
+		if (bitDepth == 16)
+			png_set_strip_16(png_ptr);
+		
 	}
 	else
+	{
+		fclose(fp);
 		return false;
+	}
 	return true;
-}
-
-void CubeGame::_pngEndOfRowCallback(png_ptr ptr, png_uint_32 row, int pass)
-{
-
 }
 
 //------------------------------------------------------------------------------
