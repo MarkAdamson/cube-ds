@@ -17,7 +17,6 @@
  * along with cube-ds.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <png.h>
 #include "cubegame.h"
 
 #include "screen.h"
@@ -701,6 +700,52 @@ void CubeGame::_switchScreens()
 	}
 }
 
+bool CubeGame::_loadPNG(char* filename)
+{
+	FILE* fp;
+
+	if(check_if_png(filename))
+	{
+		fp = fopen(filename, "rb");
+
+		png_structp png_ptr = png_create_read_struct
+		(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+		if (!png_ptr)
+			return false;
+
+		png_infop info_ptr = png_create_info_struct(png_ptr);
+		if (!info_ptr)
+		{
+			png_destroy_read_struct(&png_ptr, (png_infopp)NULL, (png_infopp)NULL);
+			return false;
+		}
+
+		png_infop end_info = png_create_info_struct(png_ptr);
+		if (!end_info)
+		{
+			png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp)NULL);
+			return false;
+		}
+
+		if (setjmp(png_jmpbuf(png_ptr)))
+		{
+			png_destroy_read_struct(&png_ptr, &info_ptr, &end_info);
+			fclose(fp);
+			return false;
+		}
+
+		png_set_read_status_fn(png_ptr, _pngEndOfRowCallback);
+	}
+	else
+		return false;
+	return true;
+}
+
+void CubeGame::_pngEndOfRowCallback(png_ptr ptr, png_uint_32 row, int pass)
+{
+
+}
+
 //------------------------------------------------------------------------------
 // Replacement for the normal processOneVBL
 // exactly the same except for....
@@ -809,7 +854,7 @@ void CubeGame::handleValueChangeEvent(const GadgetEventArgs& e)
 	{
 		char filename[_settingsscreen->tbxBackgroundImage->getText().getLength()];
 		_settingsscreen->tbxBackgroundImage->getText().copyToCharArray(filename);
-		if(check_if_png(filename))
+		if(_loadPNG(filename))
 			_settingsscreen->tbxImageCheck->setText("yay!");
 		else
 			_settingsscreen->tbxImageCheck->setText("nay :(");
