@@ -42,6 +42,11 @@ private:
 	u16* gfxRedo;
 	u16* gfxCancel;
 	u16* gfxOk;
+
+	//background image
+	uint8* backgroundTexData;
+	bool showBackgroundImage;
+	GL_TEXTURE_TYPE_ENUM glColourType;
 	
 	// Variables for the game controls
 	int dx, dy;

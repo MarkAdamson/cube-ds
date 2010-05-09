@@ -17,6 +17,8 @@
  * along with cube-ds.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <malloc.h>
+
 #include "cubegame.h"
 
 #include "screen.h"
@@ -138,7 +140,7 @@ void CubeGame::_initGL()
 	// initialize gl
 	glInit();
 
-	glEnable(GL_OUTLINE | GL_ANTIALIAS);
+	glEnable(GL_OUTLINE | GL_ANTIALIAS | GL_TEXTURE_2D);
 
 	//set the first outline color to white
 	glSetOutlineColor(0,RGB15(0,0,0));
@@ -166,6 +168,7 @@ void CubeGame::startup()
 {
 	videoSetMode(MODE_5_3D | DISPLAY_BG0_ACTIVE | DISPLAY_SPR_ACTIVE | DISPLAY_SPR_1D_LAYOUT);
 	vramSetBankA(VRAM_A_MAIN_SPRITE);
+	vramSetBankD(VRAM_D_TEXTURE);
 	bgSetPriority(0, 1);
 
 	//consoleDemoInit();
@@ -187,6 +190,7 @@ void CubeGame::startup()
 	saving=false;
 	switching=false;
 	painting=false;
+	showBackgroundImage=false;
 	SLRotation=0;
 
 	// Initialise variables
@@ -566,6 +570,32 @@ void CubeGame::_drawShit()
 				0.0, 1.0, 0.0);		//up
 	glPolyFmt(POLY_ALPHA(31) | POLY_CULL_FRONT | POLY_ID(0));
 
+	if(showBackgroundImage)
+	{
+		int	texture[1];			// Storage For One Texture ( NEW )
+
+		glGenTextures(1, &texture[0]);
+		glBindTexture(0, texture[0]);
+		glTexImage2D(0, 0, glColourType, TEXTURE_SIZE_128 , TEXTURE_SIZE_128, 0, TEXGEN_TEXCOORD, backgroundTexData);
+
+		glTranslate3f32(0, 0, floattof32(-10));
+
+		glBindTexture(GL_TEXTURE_2D, texture[0]);
+
+		glBegin(GL_QUADS);
+		glVertex3f(-64,64,0);
+		glVertex3f(64,64,0);
+		glVertex3f(64,-64,0);
+		glVertex3f(-64,-64,0);
+		glEnd();
+	}
+
+	glLoadIdentity();
+	gluLookAt(	0.0, 0.0, 3.5,		//camera position
+				0.0, 0.0, 0.0,		//look at
+				0.0, 1.0, 0.0);		//up
+	glPolyFmt(POLY_ALPHA(31) | POLY_CULL_FRONT | POLY_ID(0));
+
 	// Update and draw the cube
 	if(!settings)
 	{
@@ -696,6 +726,7 @@ void CubeGame::_switchScreens()
 bool CubeGame::_loadPNG(char* filename)
 {
 	FILE* fp;
+	png_bytep* row_ptrs = NULL;
 
 	/* Open the prospective PNG file. */
 	if ((fp = fopen(filename, "rb")) == NULL)
@@ -745,37 +776,74 @@ bool CubeGame::_loadPNG(char* filename)
 		{
 			case PNG_COLOR_TYPE_PALETTE:
 				png_set_palette_to_rgb(png_ptr);
-				//Don't forget to update the channel info (thanks Tom!)
-				//It's used later to know how big a buffer we need for the image
 				channels = 3;
 				break;
 			case PNG_COLOR_TYPE_GRAY:
-				if (bitDepth < 8)
-				png_set_expand_gray_1_2_4_to_8(png_ptr);
-				//And the bitdepth info
-				bitDepth = 8;
+			case PNG_COLOR_TYPE_GRAY_ALPHA:
+				png_set_gray_to_rgb(png_ptr);
+				channels = 3;
+				//if (bitDepth < 8)
+				//png_set_expand_gray_1_2_4_to_8(png_ptr);
+				//bitDepth = 8;
 				break;
 		}
 
 		/*if the image has a transperancy set.. convert it to a full Alpha channel..*/
-		if (png_get_valid(png_ptr, info_ptr, PNG_INFO_tRNS))
-		{
-			png_set_tRNS_to_alpha(png_ptr);
-			channels+=1;
-		}
+		//if (png_get_valid(png_ptr, info_ptr, PNG_INFO_tRNS))
+		//{
+		//	png_set_tRNS_to_alpha(png_ptr);
+		//	channels+=1;
+		//}
 
 		//We don't support 16 bit precision.. so if the image Has 16 bits per channel
         //precision... round it down to 8.
 		if (bitDepth == 16)
+		{
 			png_set_strip_16(png_ptr);
-		
+			bitDepth = 8;
+		}
+
+		//if(channels==3)
+			glColourType = GL_RGB;
+		//if(channels==4)
+		//	glColourType = GL_RGBA;
+
+		//Here's one of the pointers we've defined in the error handler section:
+		//Array of row pointers. One for every row.
+		row_ptrs = new png_bytep[height];
+
+		//Alocate a buffer with enough space.
+		//(Don't use the stack, these blocks get big easilly)
+		//This pointer was also defined in the error handling section, so we can clean it up on error.
+		backgroundTexData = new uint8[width * height * bitDepth * channels / 8];
+		//This is the length in bytes, of one row.
+		const unsigned int stride = width * bitDepth * channels / 8;
+
+		//A little for-loop here to set all the row pointers to the starting
+		//Adresses for every row in the buffer
+
+		for (size_t i = 0; i < height; i++) {
+			//Set the pointer to the data pointer + i times the row stride.
+			//Notice that the row order is reversed with q.
+			//This is how at least OpenGL expects it,
+			//and how many other image loaders present the data.
+			uint q = (height- i - 1) * stride;
+			row_ptrs[i] = (png_bytep)backgroundTexData + q;
+		}
+
+		//And here it is! The actuall reading of the image!
+		//Read the imagedata and write it to the adresses pointed to
+		//by rowptrs (in other words: our image databuffer)
+		png_read_image(png_ptr, row_ptrs);
+		redraw();
+
+		return true;
 	}
 	else
 	{
 		fclose(fp);
 		return false;
 	}
-	return true;
 }
 
 //------------------------------------------------------------------------------
@@ -887,7 +955,10 @@ void CubeGame::handleValueChangeEvent(const GadgetEventArgs& e)
 		char filename[_settingsscreen->tbxBackgroundImage->getText().getLength()];
 		_settingsscreen->tbxBackgroundImage->getText().copyToCharArray(filename);
 		if(_loadPNG(filename))
+		{
 			_settingsscreen->tbxImageCheck->setText("yay!");
+			showBackgroundImage=true;
+		}
 		else
 			_settingsscreen->tbxImageCheck->setText("nay :(");
 	}
