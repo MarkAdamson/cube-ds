@@ -140,7 +140,7 @@ void CubeGame::_initGL()
 	// initialize gl
 	glInit();
 
-	glEnable(GL_OUTLINE | GL_ANTIALIAS | GL_TEXTURE_2D);
+	glEnable(GL_OUTLINE | GL_ANTIALIAS | GL_CLEAR_BMP);
 
 	//set the first outline color to white
 	glSetOutlineColor(0,RGB15(0,0,0));
@@ -168,6 +168,7 @@ void CubeGame::startup()
 {
 	videoSetMode(MODE_5_3D | DISPLAY_BG0_ACTIVE | DISPLAY_SPR_ACTIVE | DISPLAY_SPR_1D_LAYOUT);
 	vramSetBankA(VRAM_A_MAIN_SPRITE);
+	//vramSetBankB(VRAM_B_TEXTURE);
 	vramSetBankD(VRAM_D_TEXTURE);
 	bgSetPriority(0, 1);
 
@@ -788,6 +789,8 @@ bool CubeGame::_loadPNG(char* filename)
 				break;
 		}
 
+		//if(colourType)
+
 		/*if the image has a transperancy set.. convert it to a full Alpha channel..*/
 		//if (png_get_valid(png_ptr, info_ptr, PNG_INFO_tRNS))
 		//{
@@ -815,7 +818,8 @@ bool CubeGame::_loadPNG(char* filename)
 		//Alocate a buffer with enough space.
 		//(Don't use the stack, these blocks get big easilly)
 		//This pointer was also defined in the error handling section, so we can clean it up on error.
-		backgroundTexData = new uint8[width * height * bitDepth * channels / 8];
+		//backgroundTexData = new uint8[width * height * bitDepth * channels / 8];
+		uint8* pngData = new uint8[width * height * bitDepth * channels / 8];
 		//This is the length in bytes, of one row.
 		const unsigned int stride = width * bitDepth * channels / 8;
 
@@ -827,15 +831,22 @@ bool CubeGame::_loadPNG(char* filename)
 			//Notice that the row order is reversed with q.
 			//This is how at least OpenGL expects it,
 			//and how many other image loaders present the data.
-			uint q = (height- i - 1) * stride;
-			row_ptrs[i] = (png_bytep)backgroundTexData + q;
+			uint8 q = (height- i - 1) * stride;
+			row_ptrs[i] = (png_bytep)pngData + q;
 		}
 
 		//And here it is! The actuall reading of the image!
 		//Read the imagedata and write it to the adresses pointed to
 		//by rowptrs (in other words: our image databuffer)
 		png_read_image(png_ptr, row_ptrs);
-		redraw();
+
+		backgroundTexData = new uint8[width * height];
+		for(uint i = 0; i < (width * height); i++)
+		{
+			uint8 tmp;
+			tmp=((pngData[i*channels] >> 3) | ((pngData[i*channels+1] >> 3) << 5) | ((pngData[i*channels+2] >> 3) << 10) | (1 << 15));
+			backgroundTexData[i]=tmp;
+		}
 
 		return true;
 	}
