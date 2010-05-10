@@ -29,11 +29,9 @@ CXXFLAGS	:= $(CFLAGS) -fno-rtti -fno-exceptions
 ASFLAGS	:=	-g $(ARCH)
 LDFLAGS	=	-specs=ds_arm9.specs -g $(ARCH) -mno-fpu -Wl,-Map,$(notdir $*.map)
 
-LIBS	:= -lnds9 -lpng -lz
-#LIBS		+= -lfat -lnds9
+LIBS	:= -lfat -lnds9 -lpng -lz
  
-LIBDIRS	:=	$(LIBNDS)
-LIBDIRS += $(PORTLIBS)
+LIBDIRS	:=	$(LIBNDS) $(PORTLIBS)
  
 ifneq ($(BUILD),$(notdir $(CURDIR)))
  
