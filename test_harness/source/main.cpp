@@ -46,7 +46,6 @@ void initGL()
 
 	//set the first outline color to white
 	glSetOutlineColor(0,RGB15(0,0,0));
-	glSetOutlineColor(1,RGB15(31,31,31));
 
 	// setup the rear plane
 	glClearColor(0,31,31,31); // set BG
@@ -87,7 +86,7 @@ int main(int argc, char* argv[])
 	touchVector.Z=0;
 	
 	initGfx();
-	initSprites();
+	//initSprites();
 	initGL();
 	
 	consoleDemoInit();
@@ -95,6 +94,7 @@ int main(int argc, char* argv[])
 	
 	while(true)
 	{
+		glPushMatrix();
 		// Reset movement states
 		twisting=FALSE;
 		moving=FALSE;
@@ -166,5 +166,11 @@ int main(int argc, char* argv[])
 		if(moving) cube.Move(dx, dy);
 	
 		cube.Update(twisting, touchXY, touchVector, false, 0);
+		
+		glPopMatrix(1);
+		
+		glFlush(0);
+
+		swiWaitForVBlank();
 	}
 }
