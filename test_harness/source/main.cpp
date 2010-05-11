@@ -30,7 +30,8 @@
 #include "rubikscube.h"
 
 #define PNG_BYTES_TO_CHECK 8
-
+	
+int textureID;
 rgb* backgroundTexData;
 
 bool check_if_png(FILE* fp)
@@ -64,10 +65,10 @@ void initGL()
 	// initialize gl
 	glInit();
 
-	glEnable(GL_ANTIALIAS | GL_TEXTURE_2D);
+	glEnable(GL_ANTIALIAS | GL_OUTLINE | GL_TEXTURE_2D);
 
 	//set the first outline color to white
-	//glSetOutlineColor(0,RGB15(0,0,0));
+	glSetOutlineColor(0,RGB15(0,0,0));
 
 	// setup the rear plane
 	glClearColor(0,31,31,31); // set BG
@@ -76,17 +77,15 @@ void initGL()
 
 	// Set our view port to be the same size as the screen
 	glViewport(0,0,255,191);
+	
+	glGenTextures(1, &textureID);
+	glBindTexture(0, textureID);
+	glTexImage2D(0, 0, GL_RGB, TEXTURE_SIZE_128 , TEXTURE_SIZE_128, 0, TEXGEN_TEXCOORD, (u8*)backgroundTexData);
 
 	//change ortho vs perspective
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	gluPerspective(70, 256.0 / 192.0, 0.1, 20);
-
-	// Set the current matrix to be the model matrix
-	glMatrixMode(GL_MODELVIEW);
-	glPolyFmt(POLY_ALPHA(31) | POLY_CULL_FRONT | POLY_ID(0));
-
-	glLoadIdentity();
 	gluLookAt(	0.0, 0.0, 3.5,		//camera position
 				0.0, 0.0, 0.0,		//look at
 				0.0, 1.0, 0.0);		//up
@@ -218,11 +217,14 @@ bool loadPNG(char* filename)
 
 int main(int argc, char* argv[])
 {
-	//RubiksCube cube;
+	RubiksCube cube;
 	bool twisting, moving;
 	int dx, dy;
 	touchPosition touchXY, oldXY;
 	VECTOR touchVector;
+	
+	consoleDemoInit();
+	fatInitDefault();
 	
 	dx=0; dy=0;
 	oldXY.px = 45;
@@ -231,47 +233,55 @@ int main(int argc, char* argv[])
 	touchVector.Y=0;
 	touchVector.Z=0;
 	
+	loadPNG((char*)"/128.png");
+	
 	initGfx();
 	initSprites();
 	initGL();
-	
-	fatInitDefault();
-	consoleDemoInit();
-	printf("Console Output:\n");
-	
-	int textureID;
-	loadPNG((char*)"/128.png");
-	
-	glGenTextures(1, &textureID);
-	glBindTexture(0, textureID);
-	glTexImage2D(0, 0, GL_RGB, TEXTURE_SIZE_128 , TEXTURE_SIZE_128, 0, TEXGEN_TEXCOORD, (u8*)backgroundTexData);
-	
 	
 	while(true)
 	{
 		glMatrixMode(GL_MODELVIEW);
 		glPushMatrix();
 		
-		glTranslate3f32(0, 0, floattof32(-1));
+		glTranslate3f32(0, 0, floattof32(-10));
 		
-		glPolyFmt(POLY_ALPHA(31) | POLY_CULL_BACK);
+		glPolyFmt(POLY_ALPHA(31) | POLY_CULL_FRONT | POLY_ID(63));
+		
+		//glMaterialf(GL_AMBIENT, RGB15(16,16,16));
+		//glMaterialf(GL_DIFFUSE, RGB15(16,16,16));
+		//glMaterialf(GL_SPECULAR, BIT(15) | RGB15(8,8,8));
+		glMaterialf(GL_EMISSION, RGB15(31,31,31));
 		
 		glBindTexture(0, textureID);
 		
 		//draw the obj
 		glBegin(GL_QUAD);
+			glNormal(NORMAL_PACK(0,inttov10(-1),0));
 
-			GFX_TEX_COORD = (TEXTURE_PACK(0, inttot16(128)));
-			glVertex3v16(floattov16(-0.5),	floattov16(-0.5), 0 );
+			/*GFX_TEX_COORD = (TEXTURE_PACK(0, 0));
+			glVertex3v16(floattov16(-15),	floattov16(15), 0 );
 	
-			GFX_TEX_COORD = (TEXTURE_PACK(inttot16(128),inttot16(128)));
-			glVertex3v16(floattov16(0.5),	floattov16(-0.5), 0 );
+			GFX_TEX_COORD = (TEXTURE_PACK(inttot16(128),0));
+			glVertex3v16(floattov16(15),	floattov16(15), 0 );
 	
-			GFX_TEX_COORD = (TEXTURE_PACK(inttot16(128), 0));
-			glVertex3v16(floattov16(0.5),	floattov16(0.5), 0 );
+			GFX_TEX_COORD = (TEXTURE_PACK(inttot16(128), inttot16(128)));
+			glVertex3v16(floattov16(15),	floattov16(-15), 0 );
 
-			GFX_TEX_COORD = (TEXTURE_PACK(0,0));
-			glVertex3v16(floattov16(-0.5),	floattov16(0.5), 0 );
+			GFX_TEX_COORD = (TEXTURE_PACK(0,inttot16(128)));
+			glVertex3v16(floattov16(-15),	floattov16(-15), 0 );*/
+			
+			GFX_TEX_COORD = (TEXTURE_PACK(0, 0));
+			glVertex3f(-64,	64, 0 );
+	
+			GFX_TEX_COORD = (TEXTURE_PACK(inttot16(128),0));
+			glVertex3f(64,	64, 0 );
+	
+			GFX_TEX_COORD = (TEXTURE_PACK(inttot16(128), inttot16(128)));
+			glVertex3f(64,	-64, 0 );
+
+			GFX_TEX_COORD = (TEXTURE_PACK(0,inttot16(128)));
+			glVertex3f(-64,	-64, 0 );
 		
 		glEnd();
 		
@@ -346,7 +356,9 @@ int main(int argc, char* argv[])
 		touchVector.Y=-dy;
 
 		// Move the cube if necessary
-		//if(moving) cube.Move(dx, dy);
+		if(moving) cube.Move(dx, dy);
+		
+		glPolyFmt(POLY_ALPHA(31) | POLY_CULL_FRONT | POLY_ID(0));
 	
 		//cube.Update(twisting, touchXY, touchVector, false, 0);
 		
