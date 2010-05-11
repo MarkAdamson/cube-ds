@@ -44,7 +44,7 @@ private:
 	u16* gfxOk;
 
 	//background image
-	uint8* backgroundTexData;
+	rgb* backgroundTexData;
 	bool showBackgroundImage;
 	GL_TEXTURE_TYPE_ENUM glColourType;
 	
