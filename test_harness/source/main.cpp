@@ -31,7 +31,7 @@
 
 #define PNG_BYTES_TO_CHECK 8
 
-u16* backgroundTexData;
+rgb* backgroundTexData;
 
 bool check_if_png(FILE* fp)
 {
@@ -64,10 +64,10 @@ void initGL()
 	// initialize gl
 	glInit();
 
-	glEnable(GL_OUTLINE | GL_ANTIALIAS | GL_TEXTURE_2D);
+	glEnable(GL_ANTIALIAS | GL_TEXTURE_2D);
 
 	//set the first outline color to white
-	glSetOutlineColor(0,RGB15(0,0,0));
+	//glSetOutlineColor(0,RGB15(0,0,0));
 
 	// setup the rear plane
 	glClearColor(0,31,31,31); // set BG
@@ -103,34 +103,27 @@ bool loadPNG(char* filename)
 
 	if(check_if_png(fp))
 	{
+		//create png pointer
 		png_structp png_ptr = png_create_read_struct
 		(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
 		if (!png_ptr)
 			return false;
-
+		//create png info pointer
 		png_infop info_ptr = png_create_info_struct(png_ptr);
 		if (!info_ptr)
 		{
 			png_destroy_read_struct(&png_ptr, (png_infopp)NULL, (png_infopp)NULL);
 			return false;
 		}
-
-		png_infop end_info = png_create_info_struct(png_ptr);
-		if (!end_info)
-		{
-			png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp)NULL);
-			return false;
-		}
-
+		//set error exit point
 		if (setjmp(png_jmpbuf(png_ptr)))
 		{
-			png_destroy_read_struct(&png_ptr, &info_ptr, &end_info);
+			png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp)NULL);
 			fclose(fp);
 			return false;
 		}
 		
 		png_init_io(png_ptr, fp);
-		
 		png_set_sig_bytes(png_ptr, PNG_BYTES_TO_CHECK);
 		
 		png_read_info(png_ptr, info_ptr);
@@ -141,6 +134,11 @@ bool loadPNG(char* filename)
 		uint32 channels = png_get_channels(png_ptr, info_ptr);
 		uint32 bitDepth = png_get_bit_depth(png_ptr, info_ptr);
 		
+		printf("width: %i\n", width);
+		printf("height: %i\n", height);
+		printf("bitDepth: %i\n", bitDepth);
+		printf("channels: %i\n", channels);
+		
 		switch (colourType)
 		{
 			case PNG_COLOR_TYPE_PALETTE:
@@ -150,21 +148,12 @@ bool loadPNG(char* filename)
 			case PNG_COLOR_TYPE_GRAY:
 			case PNG_COLOR_TYPE_GRAY_ALPHA:
 				png_set_gray_to_rgb(png_ptr);
-				channels = 3;
+				channels+=2;
 				//if (bitDepth < 8)
 				//png_set_expand_gray_1_2_4_to_8(png_ptr);
 				//bitDepth = 8;
 				break;
 		}
-
-		//if(colourType)
-
-		/*if the image has a transperancy set.. convert it to a full Alpha channel..*/
-		//if (png_get_valid(png_ptr, info_ptr, PNG_INFO_tRNS))
-		//{
-		//	png_set_tRNS_to_alpha(png_ptr);
-		//	channels+=1;
-		//}
 
 		//We don't support 16 bit precision.. so if the image Has 16 bits per channel
         //precision... round it down to 8.
@@ -178,44 +167,46 @@ bool loadPNG(char* filename)
 		//	glColourType = GL_RGB;
 		//if(channels==4)
 		//	glColourType = GL_RGBA;
+		
+		png_read_update_info(png_ptr, info_ptr);
+		
+		int rowbytes = png_get_rowbytes(png_ptr, info_ptr);
+		
+		unsigned char* pngData;
 
-		//Here's one of the pointers we've defined in the error handler section:
-		//Array of row pointers. One for every row.
-		row_ptrs = new png_bytep[height];
-
-		//Alocate a buffer with enough space.
-		//(Don't use the stack, these blocks get big easilly)
-		//This pointer was also defined in the error handling section, so we can clean it up on error.
-		//backgroundTexData = new uint8[width * height * bitDepth * channels / 8];
-		uint8* pngData = new uint8[width * height * bitDepth * channels / 8];
-		//This is the length in bytes, of one row.
-		const unsigned int stride = width * bitDepth * channels / 8;
-
-		//A little for-loop here to set all the row pointers to the starting
-		//Adresses for every row in the buffer
-
-		for (size_t i = 0; i < height; i++) {
-			//Set the pointer to the data pointer + i times the row stride.
-			//Notice that the row order is reversed with q.
-			//This is how at least OpenGL expects it,
-			//and how many other image loaders present the data.
-			uint8 q = (height- i - 1) * stride;
-			row_ptrs[i] = (png_bytep)pngData + q;
+		/* Allocate the image_data buffer. */
+		if ((pngData = (unsigned char *) malloc(rowbytes * height))==NULL) {
+			png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
+			return false;
 		}
 
-		//And here it is! The actuall reading of the image!
-		//Read the imagedata and write it to the adresses pointed to
+		if ((row_ptrs = (png_bytepp)malloc(height*sizeof(png_bytep))) == NULL) {
+			png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
+			free(pngData);
+			pngData = NULL;
+			return false;
+		}
+		
+		/* set the individual row_pointers to point at the correct offsets */
+		for (uint i = 0;  i < height;  ++i)
+			row_ptrs[height - 1 - i] = pngData + i*rowbytes;
+
+		//And here it is! The actual reading of the image!
+		//Read the imagedata and write it to the addresses pointed to
 		//by rowptrs (in other words: our image databuffer)
 		png_read_image(png_ptr, row_ptrs);
 
-		backgroundTexData = new uint16[width * height];
+		backgroundTexData = new rgb[width * height];
 		for(uint i = 0; i < (width * height); i++)
 		{
-			uint16 tmp;
-			tmp=((pngData[i*channels] >> 3) | ((pngData[i*channels+1] >> 3) << 5) | ((pngData[i*channels+2] >> 3) << 10));
+			rgb tmp = RGB8(pngData[i*channels], pngData[i*channels+1], pngData[i*channels+2]);
 			backgroundTexData[i]=tmp;
 		}
-
+		
+		free(pngData);
+		free(row_ptrs);
+		png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp)NULL);
+		fclose(fp);
 		return true;
 	}
 	else
@@ -261,27 +252,27 @@ int main(int argc, char* argv[])
 		glMatrixMode(GL_MODELVIEW);
 		glPushMatrix();
 		
-		glTranslate3f32(0, 0, floattof32(-10));
+		glTranslate3f32(0, 0, floattof32(-1));
 		
-		//glPolyFmt(POLY_ALPHA(31) | POLY_CULL_BACK);
+		glPolyFmt(POLY_ALPHA(31) | POLY_CULL_BACK);
 		
 		glBindTexture(0, textureID);
 		
 		//draw the obj
 		glBegin(GL_QUAD);
-			glNormal(NORMAL_PACK(0,inttov10(-1),0));
-			
+
 			GFX_TEX_COORD = (TEXTURE_PACK(0, inttot16(128)));
-			glVertex3v16(floattov16(-64),	floattov16(-64), 0 );
-			
+			glVertex3v16(floattov16(-0.5),	floattov16(-0.5), 0 );
+	
 			GFX_TEX_COORD = (TEXTURE_PACK(inttot16(128),inttot16(128)));
-			glVertex3v16(floattov16(-64),	floattov16(64), 0 );
-			
+			glVertex3v16(floattov16(0.5),	floattov16(-0.5), 0 );
+	
 			GFX_TEX_COORD = (TEXTURE_PACK(inttot16(128), 0));
-			glVertex3v16(floattov16(64),	floattov16(64), 0 );
-			
+			glVertex3v16(floattov16(0.5),	floattov16(0.5), 0 );
+
 			GFX_TEX_COORD = (TEXTURE_PACK(0,0));
-			glVertex3v16(floattov16(64),	floattov16(-64), 0 );
+			glVertex3v16(floattov16(-0.5),	floattov16(0.5), 0 );
+		
 		glEnd();
 		
 		glPopMatrix(1);
