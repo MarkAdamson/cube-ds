@@ -54,6 +54,8 @@ RubikSide oldLayout[6];
 RubiksCube SLCube;
 RubikSide SLLayout[3][6];
 
+int textureID;
+
 #define PNG_BYTES_TO_CHECK 8
 
 bool check_if_png(FILE* fp)
@@ -140,7 +142,7 @@ void CubeGame::_initGL()
 	// initialize gl
 	glInit();
 
-	glEnable(GL_OUTLINE | GL_ANTIALIAS | GL_CLEAR_BMP);
+	glEnable(GL_OUTLINE | GL_ANTIALIAS);
 
 	//set the first outline color to white
 	glSetOutlineColor(0,RGB15(0,0,0));
@@ -150,6 +152,9 @@ void CubeGame::_initGL()
 	glClearColor(0,31,31,31); // set BG
 	glClearPolyID(63); // the BG and polygons will have the same ID unless a polygon is highlighted
 	glClearDepth(0x7FFF);
+
+	glGenTextures(1, &textureID);
+	glBindTexture(0, textureID);
 
 	// Set our view port to be the same size as the screen
 	glViewport(0,0,255,191);
@@ -168,8 +173,8 @@ void CubeGame::startup()
 {
 	videoSetMode(MODE_5_3D | DISPLAY_BG0_ACTIVE | DISPLAY_SPR_ACTIVE | DISPLAY_SPR_1D_LAYOUT);
 	vramSetBankA(VRAM_A_MAIN_SPRITE);
-	//vramSetBankB(VRAM_B_TEXTURE);
-	vramSetBankD(VRAM_D_TEXTURE);
+	vramSetBankB(VRAM_B_TEXTURE);
+	//vramSetBankD(VRAM_D_TEXTURE);
 	bgSetPriority(0, 1);
 
 	//consoleDemoInit();
@@ -514,11 +519,6 @@ void CubeGame::_test()
 
 void CubeGame::_drawPalette()
 {
-	glLoadIdentity();
-	gluLookAt(	0.0, 0.0, 3.5,		//camera position
-				0.0, 0.0, 0.0,		//look at
-				0.0, 1.0, 0.0);		//up
-
 	Colour palette[6];
 	float size = 0.6;
 	mainCube.getPalette(palette);
@@ -537,7 +537,6 @@ void CubeGame::_drawPalette()
 		glVertex3f((i/3)*size,-(i%3)*size-size*0.9,0);
 		glEnd();
 	}
-	//glDisable(GL_OUTLINE);
 }
 
 void CubeGame::_showPainterGUI()
@@ -562,45 +561,48 @@ void CubeGame::_hidePainterGUI()
 //-----------------------------------------------------------------------------
 void CubeGame::_drawShit()
 {
-	glEnable(GL_OUTLINE);
-	if(painting) _drawPalette();
-
 	glLoadIdentity();
 	gluLookAt(	0.0, 0.0, 3.5,		//camera position
 				0.0, 0.0, 0.0,		//look at
 				0.0, 1.0, 0.0);		//up
 	glPolyFmt(POLY_ALPHA(31) | POLY_CULL_FRONT | POLY_ID(0));
 
+	glPushMatrix();
+	if(painting) _drawPalette();
+	glPopMatrix(1);
+	glPushMatrix();
 	if(showBackgroundImage)
 	{
-		int	texture[1];			// Storage For One Texture ( NEW )
+		glEnable(GL_TEXTURE_2D);
+		glBindTexture(0, textureID);
 
-		glGenTextures(1, &texture[0]);
-		glBindTexture(0, texture[0]);
-		glTexImage2D(0, 0, glColourType, TEXTURE_SIZE_128 , TEXTURE_SIZE_128, 0, TEXGEN_TEXCOORD, backgroundTexData);
+
 
 		glTranslate3f32(0, 0, floattof32(-10));
 
-		glBindTexture(GL_TEXTURE_2D, texture[0]);
-
 		glBegin(GL_QUADS);
+
+		GFX_TEX_COORD = (TEXTURE_PACK(0, inttot16(128)));
 		glVertex3f(-64,64,0);
+		GFX_TEX_COORD = (TEXTURE_PACK(inttot16(128), inttot16(128)));
 		glVertex3f(64,64,0);
+		GFX_TEX_COORD = (TEXTURE_PACK(inttot16(128), 0));
 		glVertex3f(64,-64,0);
+		GFX_TEX_COORD = (TEXTURE_PACK(0, 0));
 		glVertex3f(-64,-64,0);
+
 		glEnd();
+
+		glDisable(GL_TEXTURE_2D);
 	}
-
-	glLoadIdentity();
-	gluLookAt(	0.0, 0.0, 3.5,		//camera position
-				0.0, 0.0, 0.0,		//look at
-				0.0, 1.0, 0.0);		//up
+	glPopMatrix(1);
 	glPolyFmt(POLY_ALPHA(31) | POLY_CULL_FRONT | POLY_ID(0));
-
 	// Update and draw the cube
 	if(!settings)
 	{
+		glPushMatrix();
 		mainCube.Update(twisting, touchXY, touchVector, painting, paintColour);
+		glPopMatrix(1);
 		if(!painting) oamSet(&oamMain,0,192,0,0,0,SpriteSize_64x32,SpriteColorFormat_256Color,gfxSettings,0,false,false,false,false,false);
 		//settingsButton->show();
 		oamSet(&oamMain,1,192,0,0,0,SpriteSize_64x32,SpriteColorFormat_256Color,gfxBack,0,false,true,false,false,false);
@@ -609,7 +611,9 @@ void CubeGame::_drawShit()
 	}else{
 		if(!saving && !loading)
 		{
+			glPushMatrix();
 			mainCube.Update(twisting, touchXY, touchVector, false, 0);
+			glPopMatrix(1);
 			oamSet(&oamMain,1,192,0,0,0,SpriteSize_64x32,SpriteColorFormat_256Color,gfxBack,0,false,true,false,false,false);
 		}else{
 			oamSet(&oamMain,1,192,0,0,0,SpriteSize_64x32,SpriteColorFormat_256Color,gfxBack,0,false,false,false,false,false);
@@ -617,32 +621,28 @@ void CubeGame::_drawShit()
 			SLRotation+=100;
 			//SLRotation%=360;
 
+			glPushMatrix();
 			glTranslate3f32(inttof32(-2), 0, 0);
 			glRotateYi(SLRotation);
 			SLCube.Resize(0.9);
 			SLCube.setLayout(SLLayout[0]);
 			SLCube.Update(twisting, touchXY, touchVector, false, 0);
+			glPopMatrix(1);
 
-			glLoadIdentity();
-			gluLookAt(	0.0, 0.0, 3.5,		//camera position
-						0.0, 0.0, 0.0,		//look at
-						0.0, 1.0, 0.0);		//up
-
+			glPushMatrix();
 			glRotateYi(SLRotation);
 			SLCube.Resize(1);
 			SLCube.setLayout(SLLayout[1]);
 			SLCube.Update(twisting, touchXY, touchVector, false, 0);
+			glPopMatrix(1);
 
-			glLoadIdentity();
-			gluLookAt(	0.0, 0.0, 3.5,		//camera position
-						0.0, 0.0, 0.0,		//look at
-						0.0, 1.0, 0.0);		//up
-
+			glPushMatrix();
 			glTranslate3f32(inttof32(2), 0, 0);
 			glRotateYi(SLRotation);
 			SLCube.Resize(0.9);
 			SLCube.setLayout(SLLayout[2]);
 			SLCube.Update(twisting, touchXY, touchVector, false, 0);
+			glPopMatrix(1);
 
 			if(keysDown() & KEY_TOUCH)
 			{
@@ -735,34 +735,27 @@ bool CubeGame::_loadPNG(char* filename)
 
 	if(check_if_png(fp))
 	{
+		//create png pointer
 		png_structp png_ptr = png_create_read_struct
 		(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
 		if (!png_ptr)
 			return false;
-
+		//create png info pointer
 		png_infop info_ptr = png_create_info_struct(png_ptr);
 		if (!info_ptr)
 		{
 			png_destroy_read_struct(&png_ptr, (png_infopp)NULL, (png_infopp)NULL);
 			return false;
 		}
-
-		png_infop end_info = png_create_info_struct(png_ptr);
-		if (!end_info)
-		{
-			png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp)NULL);
-			return false;
-		}
-
+		//set error exit point
 		if (setjmp(png_jmpbuf(png_ptr)))
 		{
-			png_destroy_read_struct(&png_ptr, &info_ptr, &end_info);
+			png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp)NULL);
 			fclose(fp);
 			return false;
 		}
 		
 		png_init_io(png_ptr, fp);
-		
 		png_set_sig_bytes(png_ptr, PNG_BYTES_TO_CHECK);
 		
 		png_read_info(png_ptr, info_ptr);
@@ -773,6 +766,11 @@ bool CubeGame::_loadPNG(char* filename)
 		uint32 channels = png_get_channels(png_ptr, info_ptr);
 		uint32 bitDepth = png_get_bit_depth(png_ptr, info_ptr);
 		
+		printf("width: %i\n", width);
+		printf("height: %i\n", height);
+		printf("bitDepth: %i\n", bitDepth);
+		printf("channels: %i\n", channels);
+
 		switch (colourType)
 		{
 			case PNG_COLOR_TYPE_PALETTE:
@@ -782,21 +780,12 @@ bool CubeGame::_loadPNG(char* filename)
 			case PNG_COLOR_TYPE_GRAY:
 			case PNG_COLOR_TYPE_GRAY_ALPHA:
 				png_set_gray_to_rgb(png_ptr);
-				channels = 3;
+				channels+=2;
 				//if (bitDepth < 8)
 				//png_set_expand_gray_1_2_4_to_8(png_ptr);
 				//bitDepth = 8;
 				break;
 		}
-
-		//if(colourType)
-
-		/*if the image has a transperancy set.. convert it to a full Alpha channel..*/
-		//if (png_get_valid(png_ptr, info_ptr, PNG_INFO_tRNS))
-		//{
-		//	png_set_tRNS_to_alpha(png_ptr);
-		//	channels+=1;
-		//}
 
 		//We don't support 16 bit precision.. so if the image Has 16 bits per channel
         //precision... round it down to 8.
@@ -807,47 +796,51 @@ bool CubeGame::_loadPNG(char* filename)
 		}
 
 		//if(channels==3)
-			glColourType = GL_RGB;
+		//	glColourType = GL_RGB;
 		//if(channels==4)
 		//	glColourType = GL_RGBA;
 
-		//Here's one of the pointers we've defined in the error handler section:
-		//Array of row pointers. One for every row.
-		row_ptrs = new png_bytep[height];
+		png_read_update_info(png_ptr, info_ptr);
 
-		//Alocate a buffer with enough space.
-		//(Don't use the stack, these blocks get big easilly)
-		//This pointer was also defined in the error handling section, so we can clean it up on error.
-		//backgroundTexData = new uint8[width * height * bitDepth * channels / 8];
-		uint8* pngData = new uint8[width * height * bitDepth * channels / 8];
-		//This is the length in bytes, of one row.
-		const unsigned int stride = width * bitDepth * channels / 8;
+		int rowbytes = png_get_rowbytes(png_ptr, info_ptr);
 
-		//A little for-loop here to set all the row pointers to the starting
-		//Adresses for every row in the buffer
+		unsigned char* pngData;
 
-		for (size_t i = 0; i < height; i++) {
-			//Set the pointer to the data pointer + i times the row stride.
-			//Notice that the row order is reversed with q.
-			//This is how at least OpenGL expects it,
-			//and how many other image loaders present the data.
-			uint8 q = (height- i - 1) * stride;
-			row_ptrs[i] = (png_bytep)pngData + q;
+		/* Allocate the image_data buffer. */
+		if ((pngData = (unsigned char *) malloc(rowbytes * height))==NULL) {
+			png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
+			return false;
 		}
 
-		//And here it is! The actuall reading of the image!
-		//Read the imagedata and write it to the adresses pointed to
+		if ((row_ptrs = (png_bytepp)malloc(height*sizeof(png_bytep))) == NULL) {
+			png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
+			free(pngData);
+			pngData = NULL;
+			return false;
+		}
+
+		/* set the individual row_pointers to point at the correct offsets */
+		for (uint i = 0;  i < height;  ++i)
+			row_ptrs[height - 1 - i] = pngData + i*rowbytes;
+
+		//And here it is! The actual reading of the image!
+		//Read the imagedata and write it to the addresses pointed to
 		//by rowptrs (in other words: our image databuffer)
 		png_read_image(png_ptr, row_ptrs);
 
-		backgroundTexData = new uint8[width * height];
+		backgroundTexData = new rgb[width * height];
 		for(uint i = 0; i < (width * height); i++)
 		{
-			uint8 tmp;
-			tmp=((pngData[i*channels] >> 3) | ((pngData[i*channels+1] >> 3) << 5) | ((pngData[i*channels+2] >> 3) << 10) | (1 << 15));
+			rgb tmp = RGB8(pngData[i*channels], pngData[i*channels+1], pngData[i*channels+2]);
 			backgroundTexData[i]=tmp;
 		}
 
+		glTexImage2D(0, 0, GL_RGB, TEXTURE_SIZE_128 , TEXTURE_SIZE_128, 0, TEXGEN_TEXCOORD, (u8*)backgroundTexData);
+
+		free(pngData);
+		free(row_ptrs);
+		png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp)NULL);
+		fclose(fp);
 		return true;
 	}
 	else
