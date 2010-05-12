@@ -142,7 +142,7 @@ void CubeGame::_initGL()
 	// initialize gl
 	glInit();
 
-	glEnable(GL_OUTLINE | GL_ANTIALIAS);
+	glEnable(GL_OUTLINE | GL_ANTIALIAS | GL_TEXTURE_2D);
 
 	//set the first outline color to white
 	glSetOutlineColor(0,RGB15(0,0,0));
@@ -565,7 +565,6 @@ void CubeGame::_drawShit()
 	gluLookAt(	0.0, 0.0, 3.5,		//camera position
 				0.0, 0.0, 0.0,		//look at
 				0.0, 1.0, 0.0);		//up
-	glPolyFmt(POLY_ALPHA(31) | POLY_CULL_FRONT | POLY_ID(0));
 
 	glPushMatrix();
 	if(painting) _drawPalette();
@@ -573,27 +572,29 @@ void CubeGame::_drawShit()
 	glPushMatrix();
 	if(showBackgroundImage)
 	{
-		glEnable(GL_TEXTURE_2D);
+		glTranslate3f32(0, 0, floattof32(-10));
+		glPolyFmt(POLY_ALPHA(31) | POLY_CULL_FRONT | POLY_ID(63));
+		glMaterialf(GL_EMISSION, RGB15(31,31,31));
 		glBindTexture(0, textureID);
 
-
-
-		glTranslate3f32(0, 0, floattof32(-10));
-
 		glBegin(GL_QUADS);
+		glNormal(NORMAL_PACK(0,inttov10(-1),0));
 
-		GFX_TEX_COORD = (TEXTURE_PACK(0, inttot16(128)));
-		glVertex3f(-64,64,0);
-		GFX_TEX_COORD = (TEXTURE_PACK(inttot16(128), inttot16(128)));
-		glVertex3f(64,64,0);
-		GFX_TEX_COORD = (TEXTURE_PACK(inttot16(128), 0));
-		glVertex3f(64,-64,0);
 		GFX_TEX_COORD = (TEXTURE_PACK(0, 0));
-		glVertex3f(-64,-64,0);
+		glVertex3f(-64,	64, 0 );
+
+		GFX_TEX_COORD = (TEXTURE_PACK(inttot16(128),0));
+		glVertex3f(64,	64, 0 );
+
+		GFX_TEX_COORD = (TEXTURE_PACK(inttot16(128), inttot16(128)));
+		glVertex3f(64,	-64, 0 );
+
+		GFX_TEX_COORD = (TEXTURE_PACK(0,inttot16(128)));
+		glVertex3f(-64,	-64, 0 );
 
 		glEnd();
 
-		glDisable(GL_TEXTURE_2D);
+		glBindTexture(0,0);
 	}
 	glPopMatrix(1);
 	glPolyFmt(POLY_ALPHA(31) | POLY_CULL_FRONT | POLY_ID(0));
