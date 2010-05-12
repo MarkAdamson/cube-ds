@@ -954,7 +954,9 @@ void RubiksCube::Draw(touchPosition touchXY)
 	glPopMatrix(1);
 	
 	
-	if(Picking){
+	if(Picking)
+	{
+		glPushMatrix();
 		for(int i=0;i<3;i++)
 			clicked[i]=0;
 		closeW = 0x7FFFFFFF; //reset the distance
@@ -966,7 +968,7 @@ void RubiksCube::Draw(touchPosition touchXY)
 		glMatrixMode(GL_PROJECTION);
 		glLoadIdentity();
 		gluPickMatrix((touchXY.px),(191-touchXY.py),4,4,viewport); // render only what is below the cursor
-		gluPerspective(70, 256.0 / 192.0, 0.1, 10); // this must be the same as the original perspective matrix
+		gluPerspective(70, 256.0 / 192.0, 0.1, 20); // this must be the same as the original perspective matrix
 		
 		glMatrixMode(GL_MODELVIEW); // switch back to modifying the modelview matrix for drawing
 		
@@ -986,7 +988,7 @@ void RubiksCube::Draw(touchPosition touchXY)
 		glViewport(0,0,255,191);
 		glMatrixMode(GL_PROJECTION);
 		glLoadIdentity();
-		gluPerspective(70, 256.0 / 192.0, 0.1, 10);
+		gluPerspective(70, 256.0 / 192.0, 0.1, 20);
 		glMatrixMode(GL_MODELVIEW);
 		
 		if(closeW<0x7FFFFFFF)
@@ -1029,6 +1031,7 @@ void RubiksCube::Draw(touchPosition touchXY)
 				Picking=false;
 			}
 		}
+		glPopMatrix(1);
 	}else{
 		//Twisting=false;
 	}
