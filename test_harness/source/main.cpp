@@ -359,8 +359,9 @@ int main(int argc, char* argv[])
 		if(moving) cube.Move(dx, dy);
 		
 		glPolyFmt(POLY_ALPHA(31) | POLY_CULL_FRONT | POLY_ID(0));
+		glBindTexture(0,0);
 	
-		//cube.Update(twisting, touchXY, touchVector, false, 0);
+		cube.Update(twisting, touchXY, touchVector, false, 0);
 		
 		glPopMatrix(1);
 		
