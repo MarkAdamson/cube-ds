@@ -580,13 +580,13 @@ void CubeGame::_drawShit()
 		glBegin(GL_QUADS);
 		glNormal(NORMAL_PACK(0,inttov10(-1),0));
 
-		GFX_TEX_COORD = (TEXTURE_PACK(0,inttot16(256)));
+		GFX_TEX_COORD = (TEXTURE_PACK(inttot16(256),0));
 		glVertex3f(-64,	64, 0 );
 
 		GFX_TEX_COORD = (TEXTURE_PACK(inttot16(256), inttot16(256)));
 		glVertex3f(64,	64, 0 );
 
-		GFX_TEX_COORD = (TEXTURE_PACK(inttot16(256),0));
+		GFX_TEX_COORD = (TEXTURE_PACK(0,inttot16(256)));
 		glVertex3f(64,	-64, 0 );
 
 		GFX_TEX_COORD = (TEXTURE_PACK(0, 0));
@@ -830,10 +830,16 @@ bool CubeGame::_loadPNG(char* filename)
 		png_read_image(png_ptr, row_ptrs);
 
 		backgroundTexData = new rgb[65536];
-		for(uint i = 0; i < (width * height); i++)
+
+		for(uint i=0; i< 65536; i++)
 		{
-			rgb tmp = RGB8(pngData[i*channels], pngData[i*channels+1], pngData[i*channels+2]);
-			backgroundTexData[i]=tmp;
+			uint dx = i / 256;
+			uint dy = i % 256;
+			uint sx = dx * width / 256;
+			uint sy = dy * height / 256;
+			uint source = sy * width + sx;
+
+			backgroundTexData[i]=RGB8(pngData[source*channels], pngData[source*channels+1], pngData[source*channels+2]);
 		}
 
 		glTexImage2D(0, 0, GL_RGB, TEXTURE_SIZE_256 , TEXTURE_SIZE_256, 0, TEXGEN_TEXCOORD, (u8*)backgroundTexData);
