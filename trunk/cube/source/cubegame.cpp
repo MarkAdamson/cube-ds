@@ -706,9 +706,10 @@ void CubeGame::_applySettings()
 	{
 		int len=_settingsscreen->settings.bgFilenameLength;
 		char* tmp;
-		tmp = new char[len];
-		for (int i=0; i<len; i++)
-			tmp[i] = _settingsscreen->settings.bgFilename[i];
+		_settingsscreen->tbxBackgroundImage->getText().copyToCharArray(tmp);
+		//tmp = new char[len];
+		//for (int i=0; i<len; i++)
+			//tmp[i] = _settingsscreen->settings.bgFilename[i];
 		//_settingsscreen->tbxBackgroundImage->getText().copyToCharArray(tmp);
 		//_settingsscreen->tbxImageCheck->setText(tmp);
 		if(_loadPNG(tmp))
