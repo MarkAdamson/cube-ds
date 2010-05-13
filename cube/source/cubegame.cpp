@@ -701,6 +701,21 @@ void CubeGame::_applySettings()
 			//cube[j].setColour(i, (_settingsscreen->settings.colour[i][0]+1)*8-1, (_settingsscreen->settings.colour[i][1]+1)*8-1, (_settingsscreen->settings.colour[i][2]+1)*8-1);
 	}
 	glClearColor(_settingsscreen->settings.bgColour[0], _settingsscreen->settings.bgColour[1], _settingsscreen->settings.bgColour[2], 31);
+
+	if(_settingsscreen->settings.showBackgroundImage && _settingsscreen->settings.bgFilenameLength)
+	{
+		int len=_settingsscreen->settings.bgFilenameLength;
+		char* tmp;
+		tmp = new char[len];
+		for (int i=0; i<len; i++)
+			tmp[i] = _settingsscreen->settings.bgFilename[i];
+		//_settingsscreen->tbxBackgroundImage->getText().copyToCharArray(tmp);
+		//_settingsscreen->tbxImageCheck->setText(tmp);
+		if(_loadPNG(tmp))
+			showBackgroundImage=true;
+	}
+	else
+		showBackgroundImage=false;
 }
 
 //------------------------------------------------------------------------------
@@ -732,7 +747,10 @@ bool CubeGame::_loadPNG(char* filename)
 
 	/* Open the prospective PNG file. */
 	if ((fp = fopen(filename, "rb")) == NULL)
+	{
+		_settingsscreen->tbxImageCheck->setText(filename);
 		return false;
+	}
 
 	if(check_if_png(fp))
 	{
@@ -740,17 +758,22 @@ bool CubeGame::_loadPNG(char* filename)
 		png_structp png_ptr = png_create_read_struct
 		(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
 		if (!png_ptr)
+		{
+			_settingsscreen->tbxImageCheck->setText("png_ptr failed");
 			return false;
+		}
 		//create png info pointer
 		png_infop info_ptr = png_create_info_struct(png_ptr);
 		if (!info_ptr)
 		{
+			_settingsscreen->tbxImageCheck->setText("info_ptr failed");
 			png_destroy_read_struct(&png_ptr, (png_infopp)NULL, (png_infopp)NULL);
 			return false;
 		}
 		//set error exit point
 		if (setjmp(png_jmpbuf(png_ptr)))
 		{
+			_settingsscreen->tbxImageCheck->setText("png load error");
 			png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp)NULL);
 			fclose(fp);
 			return false;
@@ -810,6 +833,7 @@ bool CubeGame::_loadPNG(char* filename)
 		/* Allocate the image_data buffer. */
 		if ((pngData = (unsigned char *) malloc(rowbytes * height))==NULL) {
 			png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
+			_settingsscreen->tbxImageCheck->setText("pngData OOM");
 			return false;
 		}
 
@@ -844,6 +868,7 @@ bool CubeGame::_loadPNG(char* filename)
 
 		glTexImage2D(0, 0, GL_RGB, TEXTURE_SIZE_256 , TEXTURE_SIZE_256, 0, TEXGEN_TEXCOORD, (u8*)backgroundTexData);
 
+		free(backgroundTexData);
 		free(pngData);
 		free(row_ptrs);
 		png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp)NULL);
@@ -854,6 +879,7 @@ bool CubeGame::_loadPNG(char* filename)
 	else
 	{
 		fclose(fp);
+		_settingsscreen->tbxImageCheck->setText("not valid png");
 		return false;
 	}
 }
@@ -955,24 +981,6 @@ void CubeGame::handleActionEvent(const GadgetEventArgs& e)
 		settings=!settings;
 		_switchScreens();
 		break;
-	}
-	//_switchScreens();
-	printf("Something\n");
-}
-
-void CubeGame::handleValueChangeEvent(const GadgetEventArgs& e)
-{
-	if(e.getSource()==(Gadget*)_settingsscreen->tbxBackgroundImage)
-	{
-		char filename[_settingsscreen->tbxBackgroundImage->getText().getLength()];
-		_settingsscreen->tbxBackgroundImage->getText().copyToCharArray(filename);
-		if(_loadPNG(filename))
-		{
-			_settingsscreen->tbxImageCheck->setText("yay!");
-			showBackgroundImage=true;
-		}
-		else
-			_settingsscreen->tbxImageCheck->setText("nay :(");
 	}
 }
 
