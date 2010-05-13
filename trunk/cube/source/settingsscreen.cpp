@@ -46,6 +46,8 @@ SettingsScreen::SettingsScreen(s16 x, s16 y, u16 width, u16 height, u32 flags, G
 	settings.rotateSensitivity=20;
 	settings.twistSensitivity=20;
 	settings.controlStyle=0;
+	settings.showBackgroundImage=false;
+	settings.bgFilenameLength=0;
 	setDefaultColours();
 	
 	
@@ -120,6 +122,17 @@ void SettingsScreen::revertSettings()
 	sldRotateSensitivity->setValue(settings.rotateSensitivity-10);
 	sldTwistSensitivity->setValue(settings.twistSensitivity-10);
 	rbgControlStyle->setSelectedIndex(settings.controlStyle);
+	if(settings.showBackgroundImage)
+	{
+		rbgBackgroundType->setSelectedIndex(1);
+		char tmp[settings.bgFilenameLength];
+		for (int i=0; i<settings.bgFilenameLength; i++)
+			tmp[i]=settings.bgFilename[i];
+		tbxBackgroundImage->setText(tmp);
+	}
+	else
+		rbgBackgroundType->setSelectedIndex(0);
+
 	revertColours();
 }
 
@@ -128,6 +141,12 @@ void SettingsScreen::updateSettings()
 	settings.rotateSensitivity=sldRotateSensitivity->getValue()+10;
 	settings.twistSensitivity=sldTwistSensitivity->getValue()+10;
 	settings.controlStyle=rbgControlStyle->getSelectedIndex();
+	settings.showBackgroundImage=rbgBackgroundType->getSelectedIndex();
+	settings.bgFilenameLength=tbxBackgroundImage->getText().getLength();
+	char tmp[settings.bgFilenameLength];
+	tbxBackgroundImage->getText().copyToCharArray(tmp);
+	for (int i=0; i<settings.bgFilenameLength; i++)
+		settings.bgFilename[i]=tmp[i];
 	updateColours();
 }
 
@@ -281,7 +300,7 @@ void SettingsScreen::buildBackgroundPage()
 	label->setFont(new Gulimche12);
 	_pages->addGadgetToPage(2, label);
 
-	RadioButtonGroup* rbgBackgroundType = new RadioButtonGroup(10, 30);
+	rbgBackgroundType = new RadioButtonGroup(10, 30);
 	rbgBackgroundType->newRadioButton(0, 0, 8, 8);
 	rbgBackgroundType->newRadioButton(0, 19, 8, 8);
 	rbgBackgroundType->setSelectedIndex(0);

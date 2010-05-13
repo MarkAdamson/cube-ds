@@ -26,15 +26,18 @@
 
 enum SS_Pages {SS_TITLE, SS_GAME, SS_CONTROL, SS_SOLVE, SS_BACKGROUND, SS_PAINTER};
 
-	typedef struct
-	{
-		//int size;
-		int rotateSensitivity;
-		int twistSensitivity;
-		int controlStyle;
-		int colour[6][3];
-		int bgColour[3];
-	}Settings;
+typedef struct
+{
+	//int size;
+	int rotateSensitivity;
+	int twistSensitivity;
+	int controlStyle;
+	int colour[6][3];
+	int bgColour[3];
+	bool showBackgroundImage;
+	char bgFilename[50];
+	int bgFilenameLength;
+}Settings;
 
 namespace WoopsiUI {
 
@@ -116,6 +119,7 @@ namespace WoopsiUI {
 		SliderHorizontal* sldRotateSensitivity;
 		SliderHorizontal* sldTwistSensitivity;
 		RadioButtonGroup* rbgControlStyle;
+		RadioButtonGroup* rbgBackgroundType;
 		
 		/**
 		 * Draw the area of this gadget that falls within the clipping region.

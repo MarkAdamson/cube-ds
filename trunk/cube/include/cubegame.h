@@ -85,7 +85,6 @@ private:
 	
 	// Gadget handler for Woopsi button presses
 	void handleActionEvent(const WoopsiUI::GadgetEventArgs&);
-	void handleValueChangeEvent(const WoopsiUI::GadgetEventArgs&);
 	
 public:
 	void startup();
