@@ -55,9 +55,11 @@ RubiksCube SLCube;
 RubikSide SLLayout[3][6];
 
 int textureID;
-float bgPolyWidth, bgPolyHeight;
+float bgPolyWidth, bgPolyHeight, bgRatio;
 
 #define PNG_BYTES_TO_CHECK 8
+#define BG_SCREENWIDTH 143.84;
+#define BG_SCREENHEIGHT 139.89;
 
 bool check_if_png(FILE* fp)
 {
@@ -199,8 +201,8 @@ void CubeGame::startup()
 	painting=false;
 	showBackgroundImage=false;
 	SLRotation=0;
-	bgPolyWidth=143.84;
-	bgPolyHeight=139.89;
+	bgPolyWidth=BG_SCREENWIDTH;
+	bgPolyHeight=BG_SCREENHEIGHT;
 
 	// Initialise variables
 	dx=0; dy=0;
@@ -560,6 +562,7 @@ void CubeGame::_hidePainterGUI()
 
 void CubeGame::_drawBackgroundImage()
 {
+	
 	float halfwidth = bgPolyWidth / 2;
 	float halfheight = bgPolyHeight / 2;
 	
@@ -719,12 +722,43 @@ void CubeGame::_applySettings()
 		for (int i=0; i<len; i++)
 			tmp[i] = _settingsscreen->settings.bgFilename[i];
 		//_settingsscreen->tbxBackgroundImage->getText().copyToCharArray(tmp);
-		//_settingsscreen->tbxImageCheck->setText(tmp);
+		//_settingsscreen->lblOutput->setText(tmp);
 		if(_loadPNG(tmp))
 			showBackgroundImage=true;
 	}
 	else
 		showBackgroundImage=false;
+	switch (_settingsscreen->settings.bgMode)
+	{
+	case SS_BGMODE_STRETCH:
+		bgPolyWidth = BG_SCREENWIDTH;
+		bgPolyHeight = BG_SCREENHEIGHT;
+		break;
+	case SS_BGMODE_SCALE:
+		if(bgRatio > (4/3))
+		{
+			bgPolyWidth = BG_SCREENWIDTH;
+			bgPolyHeight = bgPolyWidth / bgRatio;
+		}
+		else
+		{
+			bgPolyHeight = BG_SCREENHEIGHT;
+			bgPolyWidth = bgPolyHeight * bgRatio;
+		}
+		break;
+	case SS_BGMODE_FILL:
+		if(bgRatio > (4/3))
+		{
+			bgPolyHeight = BG_SCREENHEIGHT;
+			bgPolyWidth = bgPolyHeight * bgRatio;
+		}
+		else
+		{
+			bgPolyWidth = BG_SCREENWIDTH;
+			bgPolyHeight = bgPolyWidth / bgRatio;
+		}
+		break;
+	}
 }
 
 //------------------------------------------------------------------------------
@@ -757,7 +791,7 @@ bool CubeGame::_loadPNG(char* filename)
 	/* Open the prospective PNG file. */
 	if ((fp = fopen(filename, "rb")) == NULL)
 	{
-		_settingsscreen->tbxImageCheck->setText(filename);
+		_settingsscreen->lblOutput->setText(filename);
 		return false;
 	}
 
@@ -768,21 +802,21 @@ bool CubeGame::_loadPNG(char* filename)
 		(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
 		if (!png_ptr)
 		{
-			_settingsscreen->tbxImageCheck->setText("png_ptr failed");
+			_settingsscreen->lblOutput->setText("png_ptr failed");
 			return false;
 		}
 		//create png info pointer
 		png_infop info_ptr = png_create_info_struct(png_ptr);
 		if (!info_ptr)
 		{
-			_settingsscreen->tbxImageCheck->setText("info_ptr failed");
+			_settingsscreen->lblOutput->setText("info_ptr failed");
 			png_destroy_read_struct(&png_ptr, (png_infopp)NULL, (png_infopp)NULL);
 			return false;
 		}
 		//set error exit point
 		if (setjmp(png_jmpbuf(png_ptr)))
 		{
-			_settingsscreen->tbxImageCheck->setText("png load error");
+			_settingsscreen->lblOutput->setText("png load error");
 			png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp)NULL);
 			fclose(fp);
 			return false;
@@ -842,7 +876,7 @@ bool CubeGame::_loadPNG(char* filename)
 		/* Allocate the image_data buffer. */
 		if ((pngData = (unsigned char *) malloc(rowbytes * height))==NULL) {
 			png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
-			_settingsscreen->tbxImageCheck->setText("pngData OOM");
+			_settingsscreen->lblOutput->setText("pngData OOM");
 			return false;
 		}
 
@@ -863,6 +897,7 @@ bool CubeGame::_loadPNG(char* filename)
 		png_read_image(png_ptr, row_ptrs);
 
 		backgroundTexData = new rgb[65536];
+		bgRatio = (float)width / (float)height;
 
 		for(uint i=0; i< 65536; i++)
 		{
@@ -890,7 +925,7 @@ bool CubeGame::_loadPNG(char* filename)
 	else
 	{
 		fclose(fp);
-		_settingsscreen->tbxImageCheck->setText("not valid png");
+		_settingsscreen->lblOutput->setText("not valid png");
 		return false;
 	}
 }
@@ -980,12 +1015,13 @@ void CubeGame::handleActionEvent(const GadgetEventArgs& e)
 	case 97: //Settings
 		titleScreen->hide();
 		break;
-	case 98:
+	case 98: //Cancel
 		_settingsscreen->revertSettings();
 		settings=!settings;
 		_switchScreens();
 		break;
-	case 99:
+	case 99: //OK
+		_settingsscreen->lblOutput->setText(bgRatio);
 		_settingsscreen->updateSettings();
 		_applySettings();
 		_saveSettings();

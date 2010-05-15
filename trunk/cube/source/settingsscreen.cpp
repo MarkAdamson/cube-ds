@@ -48,6 +48,7 @@ SettingsScreen::SettingsScreen(s16 x, s16 y, u16 width, u16 height, u32 flags, G
 	settings.controlStyle=0;
 	settings.showBackgroundImage=false;
 	settings.bgFilenameLength=0;
+	settings.bgMode=SS_BGMODE_STRETCH;
 	setDefaultColours();
 	
 	
@@ -132,6 +133,7 @@ void SettingsScreen::revertSettings()
 	}
 	else
 		rbgBackgroundType->setSelectedIndex(0);
+	rbgBackgroundMode->setSelectedIndex(settings.bgMode);
 
 	revertColours();
 }
@@ -147,6 +149,7 @@ void SettingsScreen::updateSettings()
 	tbxBackgroundImage->getText().copyToCharArray(tmp);
 	for (int i=0; i<settings.bgFilenameLength; i++)
 		settings.bgFilename[i]=tmp[i];
+	settings.bgMode=rbgBackgroundMode->getSelectedIndex();
 	updateColours();
 }
 
@@ -186,6 +189,11 @@ void SettingsScreen::buildGUI() {
 	_btnCancel = new Button(rect.width - 122, rect.height - 21, 60, 20, "Cancel");
 	_btnCancel->setRefcon(98);
 	addGadget(_btnCancel);
+
+	lblOutput = new Label(rect.x, rect.height - 21, 60, 16, "");
+	lblOutput->setTextAlignmentHoriz(TextBox::TEXT_ALIGNMENT_HORIZ_LEFT);
+	lblOutput->setBorderless(true);
+	addGadget(lblOutput);
 	
 	pageRect=rect;
 	pageRect.height-=20;
@@ -333,11 +341,15 @@ void SettingsScreen::buildBackgroundPage()
 	button->setRefcon(22);
 	button->addGadgetEventHandler(this);
 	_pages->addGadgetToPage(2, button);
-
-	tbxImageCheck = new TextBox(55, 62, 168, 16, "");
-	tbxImageCheck->setTextAlignmentHoriz(TextBox::TEXT_ALIGNMENT_HORIZ_LEFT);
-	tbxImageCheck->disableKeyboardPopup();
-	_pages->addGadgetToPage(2, tbxImageCheck);
+	
+	RadioButtonGroup* rbgBackgroundMode = new RadioButtonGroup(55, 62);
+	rbgBackgroundMode->newRadioButton(0, 4, 8, 8);
+	rbgBackgroundMode->newRadioButton(0, 20, 8, 8);
+	rbgBackgroundMode->newRadioButton(0, 36, 8, 8);
+	rbgBackgroundMode->setSelectedIndex(0);
+	rbgBackgroundMode->setRefcon(23);
+	rbgBackgroundMode->addGadgetEventHandler(this);
+	_pages->addGadgetToPage(2, rbgBackgroundMode);
 
 }
 
