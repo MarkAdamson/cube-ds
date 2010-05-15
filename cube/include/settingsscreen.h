@@ -24,7 +24,7 @@
 #include "gadgetstyle.h"
 #include "gadgeteventhandler.h"
 
-enum SS_Pages {SS_TITLE, SS_GAME, SS_CONTROL, SS_SOLVE, SS_BACKGROUND, SS_PAINTER};
+enum SS_BGMODES {SS_BGMODE_STRETCH, SS_BGMODE_SCALE, SS_BGMODE_FILL};
 
 typedef struct
 {
@@ -37,6 +37,8 @@ typedef struct
 	bool showBackgroundImage;
 	char bgFilename[50];
 	int bgFilenameLength;
+	int bgMode;
+	
 }Settings;
 
 namespace WoopsiUI {
@@ -46,6 +48,7 @@ namespace WoopsiUI {
 	class RadioButtonGroup;
 	class TabScreen;
 	class TextBox;
+	class Label;
 
 	/**
 	 * Class providing a calendar/date picker.  Raises an EVENT_ACTION event
@@ -108,7 +111,8 @@ namespace WoopsiUI {
 		Button* btnBackgroundColour;
 		Button* btnApplyColours;
 		TextBox* tbxBackgroundImage;
-		TextBox* tbxImageCheck;
+		RadioButtonGroup* rbgBackgroundMode;
+		Label* lblOutput;
 		TabScreen* _pages;
 		WoopsiString strPage[6];
 		Settings settings;
