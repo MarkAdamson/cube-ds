@@ -55,6 +55,7 @@ RubiksCube SLCube;
 RubikSide SLLayout[3][6];
 
 int textureID;
+float bgPolyWidth, bgPolyHeight;
 
 #define PNG_BYTES_TO_CHECK 8
 
@@ -198,6 +199,8 @@ void CubeGame::startup()
 	painting=false;
 	showBackgroundImage=false;
 	SLRotation=0;
+	bgPolyWidth=143.84;
+	bgPolyHeight=139.89;
 
 	// Initialise variables
 	dx=0; dy=0;
@@ -555,6 +558,36 @@ void CubeGame::_hidePainterGUI()
 	oamSet(&oamMain,5,192,160,0,0,SpriteSize_64x32,SpriteColorFormat_256Color,gfxOk,0,false,true,false,false,false);
 }
 
+void CubeGame::_drawBackgroundImage()
+{
+	float halfwidth = bgPolyWidth / 2;
+	float halfheight = bgPolyHeight / 2;
+	
+	glTranslate3f32(0, 0, floattof32(-5));
+	glPolyFmt(POLY_ALPHA(31) | POLY_CULL_FRONT | POLY_ID(63));
+	glMaterialf(GL_EMISSION, RGB15(31,31,31));
+	glBindTexture(0, textureID);
+
+	glBegin(GL_QUADS);
+	glNormal(NORMAL_PACK(0,inttov10(-1),0));
+
+	GFX_TEX_COORD = (TEXTURE_PACK(inttot16(256),0));
+	glVertex3f(-halfwidth, halfheight, 0 );
+
+	GFX_TEX_COORD = (TEXTURE_PACK(inttot16(256), inttot16(256)));
+	glVertex3f(halfwidth, halfheight, 0 );
+
+	GFX_TEX_COORD = (TEXTURE_PACK(0,inttot16(256)));
+	glVertex3f(halfwidth, -halfheight, 0 );
+
+	GFX_TEX_COORD = (TEXTURE_PACK(0, 0));
+	glVertex3f(-halfwidth, -halfheight, 0 );
+
+	glEnd();
+
+	glBindTexture(0,0);
+}
+
 //-----------------------------------------------------------------------------
 // Calculates and draws all the 3d stuff, as well as asking the cube to draw
 // itself as well.
@@ -570,32 +603,7 @@ void CubeGame::_drawShit()
 	if(painting) _drawPalette();
 	glPopMatrix(1);
 	glPushMatrix();
-	if(showBackgroundImage)
-	{
-		glTranslate3f32(0, 0, floattof32(-10));
-		glPolyFmt(POLY_ALPHA(31) | POLY_CULL_FRONT | POLY_ID(63));
-		glMaterialf(GL_EMISSION, RGB15(31,31,31));
-		glBindTexture(0, textureID);
-
-		glBegin(GL_QUADS);
-		glNormal(NORMAL_PACK(0,inttov10(-1),0));
-
-		GFX_TEX_COORD = (TEXTURE_PACK(inttot16(256),0));
-		glVertex3f(-64,	64, 0 );
-
-		GFX_TEX_COORD = (TEXTURE_PACK(inttot16(256), inttot16(256)));
-		glVertex3f(64,	64, 0 );
-
-		GFX_TEX_COORD = (TEXTURE_PACK(0,inttot16(256)));
-		glVertex3f(64,	-64, 0 );
-
-		GFX_TEX_COORD = (TEXTURE_PACK(0, 0));
-		glVertex3f(-64,	-64, 0 );
-
-		glEnd();
-
-		glBindTexture(0,0);
-	}
+	if(showBackgroundImage) _drawBackgroundImage();
 	glPopMatrix(1);
 	glPolyFmt(POLY_ALPHA(31) | POLY_CULL_FRONT | POLY_ID(0));
 	// Update and draw the cube
@@ -706,10 +714,10 @@ void CubeGame::_applySettings()
 	{
 		int len=_settingsscreen->settings.bgFilenameLength;
 		char* tmp;
-		_settingsscreen->tbxBackgroundImage->getText().copyToCharArray(tmp);
-		//tmp = new char[len];
-		//for (int i=0; i<len; i++)
-			//tmp[i] = _settingsscreen->settings.bgFilename[i];
+		//_settingsscreen->tbxBackgroundImage->getText().copyToCharArray(tmp);
+		tmp = new char[len];
+		for (int i=0; i<len; i++)
+			tmp[i] = _settingsscreen->settings.bgFilename[i];
 		//_settingsscreen->tbxBackgroundImage->getText().copyToCharArray(tmp);
 		//_settingsscreen->tbxImageCheck->setText(tmp);
 		if(_loadPNG(tmp))
@@ -867,6 +875,8 @@ bool CubeGame::_loadPNG(char* filename)
 			backgroundTexData[i]=RGB8(pngData[source*channels], pngData[source*channels+1], pngData[source*channels+2]);
 		}
 
+		//glGenTextures(1, &textureID);
+		glBindTexture(0, textureID);
 		glTexImage2D(0, 0, GL_RGB, TEXTURE_SIZE_256 , TEXTURE_SIZE_256, 0, TEXGEN_TEXCOORD, (u8*)backgroundTexData);
 
 		free(backgroundTexData);

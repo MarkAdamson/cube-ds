@@ -142,7 +142,7 @@ void SettingsScreen::updateSettings()
 	settings.twistSensitivity=sldTwistSensitivity->getValue()+10;
 	settings.controlStyle=rbgControlStyle->getSelectedIndex();
 	settings.showBackgroundImage=rbgBackgroundType->getSelectedIndex();
-	settings.bgFilenameLength=tbxBackgroundImage->getText().getLength();
+	settings.bgFilenameLength=tbxBackgroundImage->getText().getLength()+1;
 	char tmp[settings.bgFilenameLength];
 	tbxBackgroundImage->getText().copyToCharArray(tmp);
 	for (int i=0; i<settings.bgFilenameLength; i++)

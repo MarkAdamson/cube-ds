@@ -72,6 +72,7 @@ private:
 	void _drawPalette();
 	void _showPainterGUI();
 	void _hidePainterGUI();
+	void _drawBackgroundImage();
 	void _drawShit();
 	void _run();
 	void _loadSettings();
