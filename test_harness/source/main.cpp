@@ -33,6 +33,7 @@
 	
 int textureID;
 rgb* backgroundTexData;
+float bgPolySize;
 
 bool check_if_png(FILE* fp)
 {
@@ -55,6 +56,7 @@ void initGfx()
 	vramSetBankB(VRAM_B_TEXTURE);
 	bgSetPriority(0, 1);
 	lcdMainOnBottom();
+	consoleDemoInit();
 }
 
 void initSprites()
@@ -80,7 +82,6 @@ void initGL()
 	
 	glGenTextures(1, &textureID);
 	glBindTexture(0, textureID);
-	glTexImage2D(0, 0, GL_RGB, TEXTURE_SIZE_128 , TEXTURE_SIZE_128, 0, TEXGEN_TEXCOORD, (u8*)backgroundTexData);
 
 	//change ortho vs perspective
 	glMatrixMode(GL_PROJECTION);
@@ -195,12 +196,22 @@ bool loadPNG(char* filename)
 		//by rowptrs (in other words: our image databuffer)
 		png_read_image(png_ptr, row_ptrs);
 
-		backgroundTexData = new rgb[width * height];
-		for(uint i = 0; i < (width * height); i++)
+		backgroundTexData = new rgb[65536];
+
+		for(uint i=0; i< 65536; i++)
 		{
-			rgb tmp = RGB8(pngData[i*channels], pngData[i*channels+1], pngData[i*channels+2]);
-			backgroundTexData[i]=tmp;
+			uint dx = i / 256;
+			uint dy = i % 256;
+			uint sx = dx * width / 256;
+			uint sy = dy * height / 256;
+			uint source = sy * width + sx;
+
+			backgroundTexData[i]=RGB8(pngData[source*channels], pngData[source*channels+1], pngData[source*channels+2]);
 		}
+		
+		glBindTexture(0, textureID);
+		glTexImage2D(0, 0, GL_RGB, TEXTURE_SIZE_256 , TEXTURE_SIZE_256, 0, TEXGEN_TEXCOORD, (u8*)backgroundTexData);
+		
 		
 		free(pngData);
 		free(row_ptrs);
@@ -222,8 +233,8 @@ int main(int argc, char* argv[])
 	int dx, dy;
 	touchPosition touchXY, oldXY;
 	VECTOR touchVector;
+	bgPolySize=128;
 	
-	consoleDemoInit();
 	fatInitDefault();
 	
 	dx=0; dy=0;
@@ -233,18 +244,22 @@ int main(int argc, char* argv[])
 	touchVector.Y=0;
 	touchVector.Z=0;
 	
-	loadPNG((char*)"/128.png");
-	
 	initGfx();
 	initSprites();
 	initGL();
 	
+	loadPNG((char*)"/128.png");
+	consoleDemoInit();
+	
 	while(true)
 	{
+		printf("bg Size: %f\n", bgPolySize);
+		float halfSize = bgPolySize / 2;
+		
 		glMatrixMode(GL_MODELVIEW);
 		glPushMatrix();
 		
-		glTranslate3f32(0, 0, floattof32(-10));
+		glTranslate3f32(0, 0, floattof32(-5));
 		
 		glPolyFmt(POLY_ALPHA(31) | POLY_CULL_FRONT | POLY_ID(63));
 		
@@ -259,29 +274,17 @@ int main(int argc, char* argv[])
 		glBegin(GL_QUAD);
 			glNormal(NORMAL_PACK(0,inttov10(-1),0));
 
-			/*GFX_TEX_COORD = (TEXTURE_PACK(0, 0));
-			glVertex3v16(floattov16(-15),	floattov16(15), 0 );
-	
-			GFX_TEX_COORD = (TEXTURE_PACK(inttot16(128),0));
-			glVertex3v16(floattov16(15),	floattov16(15), 0 );
-	
-			GFX_TEX_COORD = (TEXTURE_PACK(inttot16(128), inttot16(128)));
-			glVertex3v16(floattov16(15),	floattov16(-15), 0 );
+			GFX_TEX_COORD = (TEXTURE_PACK(inttot16(256),0));
+			glVertex3f(-halfSize, halfSize, 0 );
 
-			GFX_TEX_COORD = (TEXTURE_PACK(0,inttot16(128)));
-			glVertex3v16(floattov16(-15),	floattov16(-15), 0 );*/
-			
+			GFX_TEX_COORD = (TEXTURE_PACK(inttot16(256), inttot16(256)));
+			glVertex3f(halfSize, halfSize, 0 );
+
+			GFX_TEX_COORD = (TEXTURE_PACK(0,inttot16(256)));
+			glVertex3f(halfSize, -halfSize, 0 );
+
 			GFX_TEX_COORD = (TEXTURE_PACK(0, 0));
-			glVertex3f(-64,	64, 0 );
-	
-			GFX_TEX_COORD = (TEXTURE_PACK(inttot16(128),0));
-			glVertex3f(64,	64, 0 );
-	
-			GFX_TEX_COORD = (TEXTURE_PACK(inttot16(128), inttot16(128)));
-			glVertex3f(64,	-64, 0 );
-
-			GFX_TEX_COORD = (TEXTURE_PACK(0,inttot16(128)));
-			glVertex3f(-64,	-64, 0 );
+			glVertex3f(-halfSize, -halfSize, 0 );
 		
 		glEnd();
 		
@@ -304,21 +307,23 @@ int main(int argc, char* argv[])
 		}
 
 		// Some simple tests using face buttons
-		if(down & KEY_X)
-		{
-			printf("about to test solve...\n");
-			//cube.Solve();
-		}
-		if(down & KEY_Y)
-		{
-			//cube.Scramble();
-		}
-		if(down & KEY_A)
-		{
-		}
+		if(down & KEY_DOWN)
+			bgPolySize-=0.1;
+		if(down & KEY_UP)
+			bgPolySize+=0.1;
+		if(held & KEY_LEFT)
+			bgPolySize-=0.1;
+		if(held & KEY_RIGHT)
+			bgPolySize+=0.1;
+		
 		if(down & KEY_B)
-		{
-		}
+			bgPolySize-=0.01;
+		if(down & KEY_X)
+			bgPolySize+=0.01;
+		if(held & KEY_Y)
+			bgPolySize-=0.01;
+		if(held & KEY_A)
+			bgPolySize+=0.01;
 
 		//if user drags then grab the delta
 		if(held & KEY_TOUCH)
