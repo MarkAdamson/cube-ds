@@ -111,7 +111,6 @@ namespace WoopsiUI {
 		Button* btnBackgroundColour;
 		Button* btnApplyColours;
 		TextBox* tbxBackgroundImage;
-		RadioButtonGroup* rbgBackgroundMode;
 		Label* lblOutput;
 		TabScreen* _pages;
 		WoopsiString strPage[6];
@@ -124,6 +123,7 @@ namespace WoopsiUI {
 		SliderHorizontal* sldTwistSensitivity;
 		RadioButtonGroup* rbgControlStyle;
 		RadioButtonGroup* rbgBackgroundType;
+		RadioButtonGroup* rbgBackgroundMode;
 		
 		/**
 		 * Draw the area of this gadget that falls within the clipping region.
