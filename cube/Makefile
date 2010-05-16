@@ -29,7 +29,7 @@ CXXFLAGS	:= $(CFLAGS) -fno-rtti -fno-exceptions
 ASFLAGS	:=	-g $(ARCH)
 LDFLAGS	=	-specs=ds_arm9.specs -g $(ARCH) -mno-fpu -Wl,-Map,$(notdir $*.map)
 
-LIBS	:= -L$(DEVKITPRO)/libwoopsi/lib -lwoopsi -lfat -lnds9 -lpng -lz
+LIBS	:= -L$(DEVKITPRO)/libwoopsi/lib -lwoopsi -lfat -lnds9 -lpng -lz -ljpeg
 #LIBS		+= -lfat -lnds9
  
 LIBDIRS	:=	$(LIBNDS)

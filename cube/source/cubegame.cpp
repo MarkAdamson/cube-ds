@@ -56,7 +56,6 @@ RubikSide SLLayout[3][6];
 
 int textureID;
 float bgPolyWidth, bgPolyHeight, bgRatio;
-char* oldBg;
 
 #define PNG_BYTES_TO_CHECK 8
 #define BG_SCREENWIDTH 143.84;
@@ -800,6 +799,82 @@ void CubeGame::_switchScreens()
 	}
 }
 
+bool CubeGame::_loadJPG(char* filename)
+{
+	FILE* fp;
+	
+	/* Open the prospective JPG file. */
+	if ((fp = fopen(filename, "rb")) == NULL)
+	{
+		_settingsscreen->lblOutput->setText(filename);
+		return false;
+	}
+	else
+	{
+		struct jpeg_decompress_struct cinfo;
+		struct jpeg_error_mgr jerr;
+		int row_stride;
+
+		/* Initialize the JPEG decompression object with default error handling. */
+		cinfo.err = jpeg_std_error(&jerr);
+		jpeg_create_decompress(&cinfo);
+
+		/* Specify data source for decompression */
+		jpeg_stdio_src(&cinfo, fp);
+
+		/* Read file header, set default decompression parameters */
+		(void) jpeg_read_header(&cinfo, TRUE);
+
+		jpeg_start_decompress(&cinfo);
+
+		unsigned char* jpgData;
+		
+
+		/* Allocate the image_data buffer. */
+		if ((jpgData = (unsigned char *) malloc(cinfo.output_width * cinfo.output_height * cinfo.output_components * 8))==NULL) {
+			//png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
+			_settingsscreen->lblOutput->setText("jpgData OOM");
+			return false;
+		}
+		
+		row_stride = cinfo.output_width * cinfo.output_components;
+		//jpgData = new u8[row_stride*cinfo.output_height];
+		int offset=0;
+		int lines=0;
+		/* Make a one-row-high sample array that will go away when done with image */
+		//jpgData = (*cinfo.mem->alloc_sarray)
+		//((j_common_ptr) &cinfo, JPOOL_IMAGE, row_stride, cinfo.output_height);
+
+		while (cinfo.output_scanline < cinfo.output_height)
+		{
+			lines = jpeg_read_scanlines(&cinfo, (JSAMPARRAY)jpgData+offset, 10);
+			offset+=lines;
+		}
+
+		backgroundTexData = new rgb[65536];
+		bgRatio = cinfo.output_width / cinfo.output_height;
+		int channels = cinfo.output_components;
+
+		for(uint i=0; i< 65536; i++)
+		{
+			uint dx = i / 256;
+			uint dy = i % 256;
+			uint sx = dx * cinfo.output_width / 256;
+			uint sy = dy * cinfo.output_height / 256;
+			uint source = sy * cinfo.output_width + sx;
+
+			backgroundTexData[i]=RGB8(jpgData[source*channels], jpgData[source*channels+1], jpgData[source*channels+2]);
+		}
+
+		//glGenTextures(1, &textureID);
+		glBindTexture(0, textureID);
+		glTexImage2D(0, 0, GL_RGB, TEXTURE_SIZE_256 , TEXTURE_SIZE_256, 0, TEXGEN_TEXCOORD, (u8*)backgroundTexData);
+
+		return true;
+	}
+	return false;
+}
+
 bool CubeGame::_loadPNG(char* filename)
 {
 	FILE* fp;
@@ -942,8 +1017,7 @@ bool CubeGame::_loadPNG(char* filename)
 	else
 	{
 		fclose(fp);
-		_settingsscreen->lblOutput->setText("not valid png");
-		return false;
+		return _loadJPG(filename);
 	}
 }
 
