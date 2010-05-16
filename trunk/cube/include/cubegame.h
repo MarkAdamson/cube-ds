@@ -18,6 +18,7 @@
  */
 
 #include <png.h>
+#include <jpeglib.h>
 #include "woopsi.h"
 #include "rubikscube.h"
 #include "button.h"
@@ -81,6 +82,7 @@ private:
 	void _loadCube(int cuben);
 	void _saveCube(int cuben);
 	void _buildTitleScreen();
+	bool _loadJPG(char* filename);
 	bool _loadPNG(char* filename);
 	//void* _pngEndOfRowCallback(png_struct*, png_uint_32, int);
 	
