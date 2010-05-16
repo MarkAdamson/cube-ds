@@ -56,6 +56,7 @@ RubikSide SLLayout[3][6];
 
 int textureID;
 float bgPolyWidth, bgPolyHeight, bgRatio;
+char* oldBg;
 
 #define PNG_BYTES_TO_CHECK 8
 #define BG_SCREENWIDTH 143.84;
@@ -723,11 +724,24 @@ void CubeGame::_applySettings()
 			tmp[i] = _settingsscreen->settings.bgFilename[i];
 		//_settingsscreen->tbxBackgroundImage->getText().copyToCharArray(tmp);
 		//_settingsscreen->lblOutput->setText(tmp);
-		if(_loadPNG(tmp))
-			showBackgroundImage=true;
+		if(tmp!=oldBg)
+		{
+			if(_loadPNG(tmp))
+			{
+				showBackgroundImage=true;
+				oldBg=tmp;
+			}
+			else
+				showBackgroundImage=false;
+		}
 	}
 	else
 		showBackgroundImage=false;
+
+	_settingsscreen->lblOutput->setText(bgRatio);
+	float scrRatio = 4.0f / 3.0f;
+	bool wide = (bgRatio>=scrRatio);
+
 	switch (_settingsscreen->settings.bgMode)
 	{
 	case SS_BGMODE_STRETCH:
@@ -735,7 +749,8 @@ void CubeGame::_applySettings()
 		bgPolyHeight = BG_SCREENHEIGHT;
 		break;
 	case SS_BGMODE_SCALE:
-		if(bgRatio > (4/3))
+
+		if(wide)
 		{
 			bgPolyWidth = BG_SCREENWIDTH;
 			bgPolyHeight = bgPolyWidth / bgRatio;
@@ -747,7 +762,7 @@ void CubeGame::_applySettings()
 		}
 		break;
 	case SS_BGMODE_FILL:
-		if(bgRatio > (4/3))
+		if(wide)
 		{
 			bgPolyHeight = BG_SCREENHEIGHT;
 			bgPolyWidth = bgPolyHeight * bgRatio;
