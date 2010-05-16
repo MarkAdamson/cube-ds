@@ -305,6 +305,7 @@ void CubeGame::_loadSettings()
 
 	fclose(settingsfile);
 
+	_settingsscreen->settings.newBg=true;
 	_applySettings();
 	_settingsscreen->revertSettings();
 
@@ -724,15 +725,16 @@ void CubeGame::_applySettings()
 			tmp[i] = _settingsscreen->settings.bgFilename[i];
 		//_settingsscreen->tbxBackgroundImage->getText().copyToCharArray(tmp);
 		//_settingsscreen->lblOutput->setText(tmp);
-		if(tmp!=oldBg)
+		
+		if(_settingsscreen->settings.newBg)
 		{
 			if(_loadPNG(tmp))
 			{
 				showBackgroundImage=true;
-				oldBg=tmp;
 			}
 			else
 				showBackgroundImage=false;
+			_settingsscreen->settings.newBg=false;
 		}
 	}
 	else
@@ -912,7 +914,7 @@ bool CubeGame::_loadPNG(char* filename)
 		png_read_image(png_ptr, row_ptrs);
 
 		backgroundTexData = new rgb[65536];
-		bgRatio = (float)width / (float)height;
+		bgRatio = width / height;
 
 		for(uint i=0; i< 65536; i++)
 		{
@@ -988,11 +990,11 @@ void CubeGame::handleActionEvent(const GadgetEventArgs& e)
 	case 13:
 		mainCube.Scramble();
 		break;
-	case 47: //Apply Colours
+	case 57: //Apply Colours
 		_settingsscreen->updateColours();
 		_applySettings();
 		break;
-	case 48: //Paint
+	case 58: //Paint
 		_settingsscreen->updateSettings();
 		_applySettings();
 		_saveSettings();

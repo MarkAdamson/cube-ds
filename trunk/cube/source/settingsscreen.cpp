@@ -49,6 +49,7 @@ SettingsScreen::SettingsScreen(s16 x, s16 y, u16 width, u16 height, u32 flags, G
 	settings.showBackgroundImage=false;
 	settings.bgFilenameLength=0;
 	settings.bgMode=SS_BGMODE_STRETCH;
+	settings.newBg=true;
 	setDefaultColours();
 	
 	
@@ -134,6 +135,7 @@ void SettingsScreen::revertSettings()
 	else
 		rbgBackgroundType->setSelectedIndex(0);
 	rbgBackgroundMode->setSelectedIndex(settings.bgMode);
+	settings.newBg=false;
 
 	revertColours();
 }
@@ -308,11 +310,12 @@ void SettingsScreen::buildBackgroundPage()
 	label->setFont(new Gulimche12);
 	_pages->addGadgetToPage(2, label);
 
+	//Radio Button background type selector
 	rbgBackgroundType = new RadioButtonGroup(10, 30);
 	rbgBackgroundType->newRadioButton(0, 0, 8, 8);
 	rbgBackgroundType->newRadioButton(0, 19, 8, 8);
 	rbgBackgroundType->setSelectedIndex(0);
-	rbgBackgroundType->setRefcon(20);
+	rbgBackgroundType->setRefcon(30);
 	rbgBackgroundType->addGadgetEventHandler(this);
 	_pages->addGadgetToPage(2, rbgBackgroundType);
 
@@ -325,31 +328,49 @@ void SettingsScreen::buildBackgroundPage()
 	label->setBorderless(true);
 	_pages->addGadgetToPage(2, label);
 
+	//Solid Background Colour Picker
 	btnBackgroundColour = new Button(75, 27, 30, 14, "");
 	btnBackgroundColour->setBackColour(woopsiRGB(settings.bgColour[0], settings.bgColour[1], settings.bgColour[2]));
-	btnBackgroundColour->setRefcon(21);
+	btnBackgroundColour->setRefcon(31);
 	btnBackgroundColour->addGadgetEventHandler(this);
 	_pages->addGadgetToPage(2, btnBackgroundColour);
 
+	// Background Image Textbox
 	tbxBackgroundImage = new TextBox(55, 44, 168, 16, "");
 	tbxBackgroundImage->setTextAlignmentHoriz(TextBox::TEXT_ALIGNMENT_HORIZ_LEFT);
+	tbxBackgroundImage->setRefcon(34);
+	tbxBackgroundImage->addGadgetEventHandler(this);
 	tbxBackgroundImage->disableKeyboardPopup();
 	_pages->addGadgetToPage(2, tbxBackgroundImage);
 
+	// File Selector button
 	Button* button = new Button(225, 44, 20, 16, "...");
 	button->setTextAlignmentVert(Label::TEXT_ALIGNMENT_VERT_BOTTOM);
-	button->setRefcon(22);
+	button->setRefcon(32);
 	button->addGadgetEventHandler(this);
 	_pages->addGadgetToPage(2, button);
 	
-	RadioButtonGroup* rbgBackgroundMode = new RadioButtonGroup(55, 62);
+	rbgBackgroundMode = new RadioButtonGroup(55, 62);
 	rbgBackgroundMode->newRadioButton(0, 4, 8, 8);
 	rbgBackgroundMode->newRadioButton(0, 20, 8, 8);
 	rbgBackgroundMode->newRadioButton(0, 36, 8, 8);
 	rbgBackgroundMode->setSelectedIndex(0);
-	rbgBackgroundMode->setRefcon(23);
+	rbgBackgroundMode->setRefcon(33);
 	rbgBackgroundMode->addGadgetEventHandler(this);
 	_pages->addGadgetToPage(2, rbgBackgroundMode);
+	
+	label = new Label(70, 66, 50, 14, "Stretch");
+	label->setTextAlignmentHoriz(Label::TEXT_ALIGNMENT_HORIZ_LEFT);
+	label->setBorderless(true);
+	_pages->addGadgetToPage(2, label);
+	label = new Label(70, 82, 30, 14, "Scale");
+	label->setTextAlignmentHoriz(Label::TEXT_ALIGNMENT_HORIZ_LEFT);
+	label->setBorderless(true);
+	_pages->addGadgetToPage(2, label);
+	label = new Label(70, 98, 30, 14, "Fill");
+	label->setTextAlignmentHoriz(Label::TEXT_ALIGNMENT_HORIZ_LEFT);
+	label->setBorderless(true);
+	_pages->addGadgetToPage(2, label);
 
 }
 
@@ -376,22 +397,22 @@ void SettingsScreen::buildPainterPage()
 	{
 		btnColour[i] = new Button((i%3)*20+offset, (i/3)*20+30, 20, 20, "");
 		btnColour[i]->setBackColour(woopsiRGB(settings.colour[i][0], settings.colour[i][1], settings.colour[i][2]));
-		btnColour[i]->setRefcon((4*10)+i);
+		btnColour[i]->setRefcon((5*10)+i);
 		btnColour[i]->addGadgetEventHandler(this);
 		_pages->addGadgetToPage(4, btnColour[i]);
 	}
 
 	Button* button = new Button(width-60-offset, 30, 60, 20, "Reset");
-	button->setRefcon(46);
+	button->setRefcon(56);
 	button->addGadgetEventHandler(this);
 	_pages->addGadgetToPage(4, button);
 
 	btnApplyColours = new Button(width-60-offset, 50, 60, 20, "Apply");
-	btnApplyColours->setRefcon(47);
+	btnApplyColours->setRefcon(57);
 	_pages->addGadgetToPage(4, btnApplyColours);
 
 	btnPaint = new Button(width/2 - 30, 80, 60, 30, "Paint");
-	btnPaint->setRefcon(48);
+	btnPaint->setRefcon(58);
 	_pages->addGadgetToPage(4, btnPaint);
 
 	/*btnColour[0] = new Button(0, 0, 20, 20, "");
@@ -441,7 +462,7 @@ void SettingsScreen::handleActionEvent(const GadgetEventArgs& e)
 {
 	int refcon=e.getSource()->getRefcon();
 
-	if(refcon==21)
+	if(refcon==31)
 	{
 		ColourPicker* pick = new ColourPicker(27, 55, 200, 80, "Choose Background Colour", e.getSource()->getBackColour(), GADGET_DRAGGABLE);
 		pick->setRefcon(100);
@@ -449,7 +470,7 @@ void SettingsScreen::handleActionEvent(const GadgetEventArgs& e)
 		addGadget(pick);
 		pick->goModal();
 	}
-	if(refcon==22)
+	if(refcon==32)
 	{
 		FileRequester* req = new FileRequester(10, 10, 150, 150, "", "/", GADGET_DRAGGABLE | GADGET_DOUBLE_CLICKABLE);
 		req->setRefcon(101);
@@ -459,7 +480,7 @@ void SettingsScreen::handleActionEvent(const GadgetEventArgs& e)
 		req->goModal();
 		//req->redraw();
 	}
-	if(refcon>=40 && refcon<46)
+	if(refcon>=50 && refcon<56)
 	{
 		ColourPicker* pick = new ColourPicker(27, 55, 200, 80, "Colour Picker", btnColour[refcon-40]->getBackColour(), GADGET_DRAGGABLE);
 		pick->setRefcon(refcon-40);
@@ -467,7 +488,7 @@ void SettingsScreen::handleActionEvent(const GadgetEventArgs& e)
 		addGadget(pick);
 		pick->goModal();
 	}
-	if(refcon==46)
+	if(refcon==56)
 	{
 		setDefaultColours();
 		for(int i=0; i<6; i++)
@@ -483,6 +504,8 @@ void SettingsScreen::handleValueChangeEvent(const GadgetEventArgs& e)
 		int refcon=e.getSource()->getRefcon();
 		if(refcon<6)
 			btnColour[refcon]->setBackColour(((ColourPicker*)e.getSource())->getColour());
+		if(refcon==34)
+			settings.newBg=true;
 		if(refcon==100)
 			btnBackgroundColour->setBackColour(((ColourPicker*)e.getSource())->getColour());
 		if(refcon==101)
