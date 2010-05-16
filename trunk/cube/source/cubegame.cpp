@@ -831,7 +831,7 @@ bool CubeGame::_loadJPG(char* filename)
 		
 
 		/* Allocate the image_data buffer. */
-		if ((jpgData = (unsigned char *) malloc(cinfo.output_width * cinfo.output_height * cinfo.output_components * 8))==NULL) {
+		if ((jpgData = (unsigned char *) malloc(cinfo.output_width * cinfo.output_height * cinfo.output_components))==NULL) {
 			//png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
 			_settingsscreen->lblOutput->setText("jpgData OOM");
 			return false;
@@ -851,6 +851,8 @@ bool CubeGame::_loadJPG(char* filename)
 			offset+=lines;
 		}
 
+		jpeg_finish_decompress(&cinfo);
+
 		backgroundTexData = new rgb[65536];
 		bgRatio = cinfo.output_width / cinfo.output_height;
 		int channels = cinfo.output_components;
@@ -869,6 +871,9 @@ bool CubeGame::_loadJPG(char* filename)
 		//glGenTextures(1, &textureID);
 		glBindTexture(0, textureID);
 		glTexImage2D(0, 0, GL_RGB, TEXTURE_SIZE_256 , TEXTURE_SIZE_256, 0, TEXGEN_TEXCOORD, (u8*)backgroundTexData);
+
+		free(jpgData);
+		free(backgroundTexData);
 
 		return true;
 	}
