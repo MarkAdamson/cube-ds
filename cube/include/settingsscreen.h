@@ -38,8 +38,10 @@ typedef struct
 	char bgFilename[50];
 	int bgFilenameLength;
 	int bgMode;
-	
+	bool newBg;
 }Settings;
+
+#define SS_FLAGS_NEWBG 1;
 
 namespace WoopsiUI {
 
