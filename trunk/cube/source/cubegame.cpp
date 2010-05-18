@@ -813,7 +813,10 @@ bool CubeGame::_loadJPG(char* filename)
 	{
 		struct jpeg_decompress_struct cinfo;
 		struct jpeg_error_mgr jerr;
-		int row_stride;
+		unsigned int row_stride;
+		unsigned char* jpgData;
+		unsigned char* rb;
+		JSAMPARRAY buffer;
 
 		/* Initialize the JPEG decompression object with default error handling. */
 		cinfo.err = jpeg_std_error(&jerr);
@@ -824,31 +827,24 @@ bool CubeGame::_loadJPG(char* filename)
 
 		/* Read file header, set default decompression parameters */
 		(void) jpeg_read_header(&cinfo, TRUE);
+		row_stride = cinfo.output_width * cinfo.output_components;
 
 		jpeg_start_decompress(&cinfo);
 
-		unsigned char* jpgData;
-		
-
 		/* Allocate the image_data buffer. */
-		if ((jpgData = (unsigned char *) malloc(cinfo.output_width * cinfo.output_height * cinfo.output_components))==NULL) {
+		if ((jpgData = (unsigned char*) malloc(cinfo.output_width * cinfo.output_height * cinfo.output_components))==NULL) {
 			//png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
 			_settingsscreen->lblOutput->setText("jpgData OOM");
 			return false;
 		}
-		
-		row_stride = cinfo.output_width * cinfo.output_components;
-		//jpgData = new u8[row_stride*cinfo.output_height];
-		int offset=0;
-		int lines=0;
-		/* Make a one-row-high sample array that will go away when done with image */
-		//jpgData = (*cinfo.mem->alloc_sarray)
-		//((j_common_ptr) &cinfo, JPOOL_IMAGE, row_stride, cinfo.output_height);
+		buffer = (*cinfo.mem->alloc_sarray) ((j_common_ptr) &cinfo, JPOOL_IMAGE, row_stride, 1);
 
-		while (cinfo.output_scanline < cinfo.output_height)
-		{
-			lines = jpeg_read_scanlines(&cinfo, (JSAMPARRAY)jpgData+offset, 10);
-			offset+=lines;
+		/* loop through file, creating image array */
+		rb = jpgData;
+		while (cinfo.output_scanline < cinfo.output_height) {
+		    (void) jpeg_read_scanlines(&cinfo, buffer, 1);
+		    memcpy(rb,buffer[0],row_stride);
+		    rb += row_stride;
 		}
 
 		jpeg_finish_decompress(&cinfo);
