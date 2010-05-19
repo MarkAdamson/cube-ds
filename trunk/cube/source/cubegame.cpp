@@ -814,8 +814,7 @@ bool CubeGame::_loadJPG(char* filename)
 		struct jpeg_decompress_struct cinfo;
 		struct jpeg_error_mgr jerr;
 		unsigned int row_stride;
-		unsigned char* jpgData;
-		unsigned char* rb;
+		u8* jpgData;
 		JSAMPARRAY buffer;
 
 		/* Initialize the JPEG decompression object with default error handling. */
@@ -828,24 +827,30 @@ bool CubeGame::_loadJPG(char* filename)
 		/* Read file header, set default decompression parameters */
 		(void) jpeg_read_header(&cinfo, TRUE);
 		row_stride = cinfo.output_width * cinfo.output_components;
+		uint width = cinfo.output_width;
+		uint height = cinfo.output_height;
 
 		jpeg_start_decompress(&cinfo);
 
 		/* Allocate the image_data buffer. */
-		if ((jpgData = (unsigned char*) malloc(cinfo.output_width * cinfo.output_height * cinfo.output_components))==NULL) {
+		if ((jpgData = (u8*) malloc(row_stride * height))==NULL) {
 			//png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
 			_settingsscreen->lblOutput->setText("jpgData OOM");
 			return false;
 		}
-		buffer = (*cinfo.mem->alloc_sarray) ((j_common_ptr) &cinfo, JPOOL_IMAGE, row_stride, 1);
+
+		u8** row_ptr = new u8 * [height];
+		for(uint i=0; i<height; i++)
+			row_ptr[i] = &jpgData[i*row_stride];
+
+		uint lines_read=0;
 
 		/* loop through file, creating image array */
-		rb = jpgData;
 		while (cinfo.output_scanline < cinfo.output_height) {
-		    (void) jpeg_read_scanlines(&cinfo, buffer, 1);
-		    memcpy(rb,buffer[0],row_stride);
-		    rb += row_stride;
+		    lines_read += jpeg_read_scanlines(&cinfo, (JSAMPARRAY)row_ptr[lines_read], 1);
 		}
+
+		delete [] row_ptr;
 
 		jpeg_finish_decompress(&cinfo);
 
@@ -857,9 +862,9 @@ bool CubeGame::_loadJPG(char* filename)
 		{
 			uint dx = i / 256;
 			uint dy = i % 256;
-			uint sx = dx * cinfo.output_width / 256;
-			uint sy = dy * cinfo.output_height / 256;
-			uint source = sy * cinfo.output_width + sx;
+			uint sx = dx * width / 256;
+			uint sy = dy * height / 256;
+			uint source = sy * width + sx;
 
 			backgroundTexData[i]=RGB8(jpgData[source*channels], jpgData[source*channels+1], jpgData[source*channels+2]);
 		}
