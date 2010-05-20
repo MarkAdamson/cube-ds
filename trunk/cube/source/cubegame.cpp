@@ -802,6 +802,7 @@ void CubeGame::_switchScreens()
 bool CubeGame::_loadJPG(char* filename)
 {
 	FILE* fp;
+	_settingsscreen->lblOutput->setText("loading jpg");
 	
 	/* Open the prospective JPG file. */
 	if ((fp = fopen(filename, "rb")) == NULL)
@@ -815,7 +816,6 @@ bool CubeGame::_loadJPG(char* filename)
 		struct jpeg_error_mgr jerr;
 		unsigned int row_stride;
 		u8* jpgData;
-		JSAMPARRAY buffer;
 
 		/* Initialize the JPEG decompression object with default error handling. */
 		cinfo.err = jpeg_std_error(&jerr);
@@ -831,6 +831,7 @@ bool CubeGame::_loadJPG(char* filename)
 		uint height = cinfo.output_height;
 
 		jpeg_start_decompress(&cinfo);
+		_settingsscreen->lblOutput->setText("jpeg start decompress");
 
 		/* Allocate the image_data buffer. */
 		if ((jpgData = (u8*) malloc(row_stride * height))==NULL) {
@@ -842,13 +843,16 @@ bool CubeGame::_loadJPG(char* filename)
 		u8** row_ptr = new u8 * [height];
 		for(uint i=0; i<height; i++)
 			row_ptr[i] = &jpgData[i*row_stride];
+		_settingsscreen->lblOutput->setText("allocated memory");
 
 		uint lines_read=0;
 
+		_settingsscreen->lblOutput->setText("creating image array");
 		/* loop through file, creating image array */
 		while (cinfo.output_scanline < cinfo.output_height) {
 		    lines_read += jpeg_read_scanlines(&cinfo, (JSAMPARRAY)row_ptr[lines_read], 1);
 		}
+		_settingsscreen->lblOutput->setText("created image array");
 
 		delete [] row_ptr;
 

@@ -192,7 +192,7 @@ void SettingsScreen::buildGUI() {
 	_btnCancel->setRefcon(98);
 	addGadget(_btnCancel);
 
-	lblOutput = new Label(rect.x, rect.height - 21, 60, 16, "");
+	lblOutput = new Label(rect.x+1, rect.height - 21, 130, 16, "");
 	lblOutput->setTextAlignmentHoriz(TextBox::TEXT_ALIGNMENT_HORIZ_LEFT);
 	lblOutput->setBorderless(true);
 	addGadget(lblOutput);
