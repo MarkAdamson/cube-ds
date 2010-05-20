@@ -81,7 +81,7 @@ void initGL()
 	
 	glGenTextures(1, &textureID);
 	glBindTexture(0, textureID);
-	glTexImage2D(0, 0, GL_RGB, TEXTURE_SIZE_128 , TEXTURE_SIZE_128, 0, TEXGEN_TEXCOORD, (u8*)backgroundTexData);
+	glTexImage2D(0, 0, GL_RGB, TEXTURE_SIZE_256 , TEXTURE_SIZE_256, 0, TEXGEN_TEXCOORD, (u8*)backgroundTexData);
 
 	//change ortho vs perspective
 	glMatrixMode(GL_PROJECTION);
@@ -196,11 +196,17 @@ bool loadPNG(char* filename)
 		//by rowptrs (in other words: our image databuffer)
 		png_read_image(png_ptr, row_ptrs);
 
-		backgroundTexData = new rgb[width * height];
-		for(uint i = 0; i < (width * height); i++)
+		backgroundTexData = new rgb[65536];
+
+		for(uint i=0; i< 65536; i++)
 		{
-			rgb tmp = RGB8(pngData[i*channels], pngData[i*channels+1], pngData[i*channels+2]);
-			backgroundTexData[i]=tmp;
+			uint dx = i / 256;
+			uint dy = i % 256;
+			uint sx = dx * width / 256;
+			uint sy = dy * height / 256;
+			uint source = sy * width + sx;
+
+			backgroundTexData[i]=RGB8(pngData[source*channels], pngData[source*channels+1], pngData[source*channels+2]);
 		}
 		
 		free(pngData);
@@ -223,17 +229,14 @@ bool loadJPG(char* filename)
 	/* Open the prospective JPG file. */
 	if ((fp = fopen(filename, "rb")) == NULL)
 	{
-		//_settingsscreen->lblOutput->setText(filename);
 		return false;
 	}
 	else
 	{
 		struct jpeg_decompress_struct cinfo;
 		struct jpeg_error_mgr jerr;
-		unsigned int row_stride;
-		unsigned char* jpgData;
-		unsigned char* rb;
-		JSAMPARRAY buffer;
+		uint row_stride;
+		u8* jpgData;
 
 		/* Initialize the JPEG decompression object with default error handling. */
 		cinfo.err = jpeg_std_error(&jerr);
@@ -244,48 +247,53 @@ bool loadJPG(char* filename)
 
 		/* Read file header, set default decompression parameters */
 		(void) jpeg_read_header(&cinfo, TRUE);
-		row_stride = cinfo.output_width * cinfo.output_components;
+		uint width = cinfo.output_width;
+		uint height = cinfo.output_height;
+		uint channels = cinfo.output_components;
+		row_stride = width * channels;
 
 		jpeg_start_decompress(&cinfo);
 		printf("jpeg_start_decompress\n");
 
 		/* Allocate the image_data buffer. */
-		if ((jpgData = (unsigned char*) malloc(cinfo.output_width * cinfo.output_height * cinfo.output_components))==NULL) {
+		if ((jpgData = (u8*) malloc(row_stride * height))==NULL) {
 			//png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
 			return false;
 		}
-		printf("allocated memory 1\n");
-		buffer = (*cinfo.mem->alloc_sarray) ((j_common_ptr) &cinfo, JPOOL_IMAGE, row_stride, 1);
-		buffer = (*cinfo.mem->alloc_sarray) ((j_common_ptr) &cinfo, JPOOL_IMAGE, row_stride, 1);
-		printf("allocated memory 2\n");
+
+		u8** row_ptr = new u8 * [height];
+		for(uint i=0; i<height; i++)
+			row_ptr[i] = &jpgData[i*row_stride];
+		if(row_ptr[height-1]==NULL)
+			return false;
+		printf("allocated memory\n");
 		
 
 		/* loop through file, creating image array */
-		rb = jpgData;
-		int offset = 0;
+		uint lines_read=0;
 		while (cinfo.output_scanline < cinfo.output_height) {
-			printf("row: %i\n", offset);
-		    (void) jpeg_read_scanlines(&cinfo, buffer, 1);
-		    memcpy(rb,buffer[0],row_stride);
-		    rb += row_stride;
-		    offset++;
+		    lines_read += jpeg_read_scanlines(&cinfo, (JSAMPARRAY)&row_ptr[lines_read], 1);
+		    printf("%i\n", lines_read);
 		}
 
+		delete [] row_ptr;
+
 		jpeg_finish_decompress(&cinfo);
+		jpeg_destroy_decompress(&cinfo);
 		printf("jpeg_finish_decompress\n");
 
 		backgroundTexData = new rgb[65536];
-		int channels = cinfo.output_components;
 
 		for(uint i=0; i< 65536; i++)
 		{
 			uint dx = i / 256;
 			uint dy = i % 256;
-			uint sx = dx * cinfo.output_width / 256;
-			uint sy = dy * cinfo.output_height / 256;
-			uint source = sy * cinfo.output_width + sx;
+			uint sx = dx * width / 256;
+			uint sy = dy * height / 256;
+			uint source = sy * width + sx;
 
 			backgroundTexData[i]=RGB8(jpgData[source*channels], jpgData[source*channels+1], jpgData[source*channels+2]);
+			printf("%i\n", backgroundTexData[i]);
 		}
 
 		free(jpgData);
@@ -354,13 +362,13 @@ int main(int argc, char* argv[])
 			GFX_TEX_COORD = (TEXTURE_PACK(0, 0));
 			glVertex3f(-64,	64, 0 );
 	
-			GFX_TEX_COORD = (TEXTURE_PACK(inttot16(128),0));
+			GFX_TEX_COORD = (TEXTURE_PACK(inttot16(256),0));
 			glVertex3f(64,	64, 0 );
 	
-			GFX_TEX_COORD = (TEXTURE_PACK(inttot16(128), inttot16(128)));
+			GFX_TEX_COORD = (TEXTURE_PACK(inttot16(256), inttot16(256)));
 			glVertex3f(64,	-64, 0 );
 
-			GFX_TEX_COORD = (TEXTURE_PACK(0,inttot16(128)));
+			GFX_TEX_COORD = (TEXTURE_PACK(0,inttot16(256)));
 			glVertex3f(-64,	-64, 0 );
 		
 		glEnd();
